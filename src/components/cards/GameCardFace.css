@@ -1,0 +1,287 @@
+.game-card-face {
+  position: absolute;
+  inset: 0;
+  container-type: inline-size;
+  isolation: isolate;
+  overflow: visible;
+  border-radius: 5.2% / 3.64%;
+  background: transparent;
+  color: #fff;
+  text-align: left;
+}
+
+.game-card-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: #17141a;
+}
+
+.game-card-clip > .game-card-artwork,
+.game-card-clip > .game-card-frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: none;
+  transform: none;
+}
+
+.collection-card:hover .game-card-clip > img {
+  transform: none;
+}
+
+.game-card-clip > .game-card-artwork {
+  object-fit: cover;
+}
+
+.game-card-clip > .game-card-frame {
+  z-index: 1;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+.game-card-header-shade {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 17.02%;
+  background: linear-gradient(rgba(6, 3, 16, 0.85), transparent);
+}
+
+.game-card-face::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1.56cqw #000;
+  content: "";
+  pointer-events: none;
+}
+
+.game-card-element-zone {
+  position: absolute;
+  z-index: 3;
+  top: -3.64%;
+  left: -7.8%;
+  width: 23.4%;
+  aspect-ratio: 1;
+  cursor: help;
+}
+
+.game-card-face .game-card-element {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: none;
+  transform: none;
+}
+
+.game-card-name {
+  position: absolute;
+  z-index: 3;
+  top: 2.91%;
+  left: 15.6%;
+  display: -webkit-box;
+  width: 68.8%;
+  overflow: hidden;
+  color: white;
+  font-family: "Lilita One", system-ui, sans-serif;
+  font-size: 4.58cqw;
+  font-weight: 400;
+  line-height: 1.05;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 5px 10px rgba(4, 2, 12, 0.95);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.game-card-row {
+  position: absolute;
+  z-index: 4;
+  left: 3.954%;
+  display: block;
+  width: 92.092%;
+  height: 10.255%;
+  color: #fff;
+  cursor: help;
+}
+
+.game-card-ability-bar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: brightness(0);
+  opacity: 0.3;
+}
+
+.game-card-cooldown {
+  position: absolute;
+  top: 17.73%;
+  left: 81.36%;
+  width: 10.28%;
+  height: 64.54%;
+  mix-blend-mode: overlay;
+}
+
+.game-card-cooldown-text {
+  position: absolute;
+  top: 50%;
+  left: 86.5%;
+  color: #fff;
+  font: 4.58cqw "Lilita One", system-ui, sans-serif;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+}
+
+.game-card-row-name {
+  position: absolute;
+  top: 50%;
+  left: 17.514%;
+  display: block;
+  width: 62.486%;
+  overflow: hidden;
+  color: #fff;
+  font: 4.16cqw "Lilita One", system-ui, sans-serif;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.game-card-skill-line {
+  position: absolute;
+  top: 16.67%;
+  width: 21.13%;
+  height: 66.67%;
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+}
+
+.game-card-skill-line-left {
+  left: 13.56%;
+  background-position: left center;
+}
+
+.game-card-skill-line-right {
+  left: 65.65%;
+  background-position: right center;
+}
+
+.game-card-row-passive .game-card-row-name {
+  left: 34.69%;
+  width: 30.96%;
+  font-size: 3.54cqw;
+}
+
+.game-card-hp {
+  position: absolute;
+  z-index: 4;
+  top: 90.11%;
+  left: 5.77%;
+  display: grid;
+  width: 88.45%;
+  height: 5.24%;
+  place-items: center;
+  border-radius: 50cqw;
+  background: #80e532;
+  color: #16300c;
+  font: 4.58cqw "Lilita One", system-ui, sans-serif;
+}
+
+.game-card-spamton {
+  position: absolute;
+  z-index: 3;
+  top: -0.51%;
+  right: -7.4%;
+  display: grid;
+  width: 18.73%;
+  aspect-ratio: 1;
+  place-items: center;
+  cursor: help;
+}
+
+.game-card-spamton img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: none;
+  transform: none;
+}
+
+.game-card-spamton strong {
+  position: absolute;
+  z-index: 1;
+  top: 46.11%;
+  left: 52.22%;
+  margin: 0;
+  color: #893d0a;
+  font: 6.97cqw "Lilita One", system-ui, sans-serif;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+}
+
+.game-card-face > .game-card-rarity {
+  position: absolute;
+  z-index: 4;
+  bottom: -4.91%;
+  left: 36%;
+  width: 28%;
+  height: 9.82%;
+  object-fit: fill;
+  transition: none;
+  transform: none;
+}
+
+.game-card-interaction-tooltip {
+  position: absolute;
+  z-index: 8;
+  right: 4%;
+  bottom: 14.5%;
+  left: 4%;
+  display: flex;
+  max-height: 30%;
+  flex-direction: column;
+  gap: 0.7cqw;
+  overflow: auto;
+  padding: 2.4cqw 3cqw;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 2cqw;
+  background: rgba(7, 6, 12, 0.94);
+  box-shadow: 0 0.7cqw 2cqw rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 3cqw;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.game-card-interaction-tooltip strong {
+  color: #d9ff83;
+  font: 3.25cqw "Lilita One", system-ui, sans-serif;
+  text-transform: uppercase;
+}
+
+.game-card-interaction-tooltip small {
+  color: #c8cebf;
+  font-size: 2.7cqw;
+}
+
+.collection-card:hover .game-card-face > img {
+  transform: none;
+}
+
+.build-option.selected .game-card-face {
+  filter: drop-shadow(0 0 3px rgba(217, 255, 87, 0.85));
+}
