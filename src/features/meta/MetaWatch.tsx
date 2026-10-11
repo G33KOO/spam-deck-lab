@@ -169,6 +169,60 @@ const communityBuilds: CommunityBuild[] = [
         { options: [{ slug: "girafe_florale", label: "Girafe florale" }] },
       ],
     },
+    {
+      id: "15",
+      slots: [
+        { options: [{ slug: "apprentie_de_la_mort", label: "Apprentie de l’amort" }] },
+        { options: [{ slug: "catimimi", label: "Catimini" }] },
+        { options: [{ slug: "maitresse_des_teintes", label: "Maîtresse des teintes" }] },
+      ],
+    },
+    {
+      id: "16",
+      slots: [
+        { options: [{ slug: "tisseuse_de_mots", label: "Tisseuse" }] },
+        { options: [{ slug: "dragonnet_des_lumieres", label: "Dragonnet des lumières" }] },
+        { options: [{ slug: "lueur_despoir", label: "Lueur d’espoir" }] },
+        { options: [{ slug: "yotaru_gardefeuille", label: "Yotaru" }] },
+      ],
+    },
+    {
+      id: "17",
+      slots: [
+        { options: [{ slug: "leviathan_des_cieux", label: "Leviathan" }] },
+        { options: [{ slug: "cornu_mythologique", label: "Cornu mythologique" }] },
+        { options: [{ slug: "tisseuse_de_mots", label: "Tisseuse" }] },
+        {
+          options: [
+            { slug: "ashtarae_lycaria", label: "Ashtarae" },
+            { slug: "neilla", label: "Neilla" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "18",
+      slots: [
+        {
+          options: [
+            { slug: "codex_des_maux_ancestraux", label: "Codex ténèbres" },
+            { slug: "codex_des_sorts_lumineux", label: "Codex lumière" },
+          ],
+        },
+        { options: [{ slug: "devoreur_de_faune", label: "Dévoreur de faune" }] },
+        { options: [{ slug: "catixy", label: "Catixy" }] },
+        { options: [{ slug: "ashtarae_lycaria", label: "Ashtarae Lycaria" }] },
+      ],
+    },
+    {
+      id: "19",
+      slots: [
+        { options: [{ slug: "epine_medusine", label: "Épine médusine" }] },
+        { options: [{ slug: "roi_feu", label: "Roi feu" }] },
+        { options: [{ slug: "wibs_lenflamme", label: "Wibs" }] },
+        { options: [{ slug: "prisonniere_de_la_machine", label: "Prisonnière de la machine" }] },
+      ],
+    },
 ];
 
 export function MetaWatch({
@@ -207,6 +261,11 @@ export function MetaWatch({
     "12": { title: t("meta.build.12.title"), description: t("meta.build.12.description") },
     "13": { title: t("meta.build.13.title"), description: t("meta.build.13.description") },
     "14": { title: t("meta.build.14.title"), description: t("meta.build.14.description") },
+    "15": { title: t("meta.build.15.title"), description: t("meta.build.15.description") },
+    "16": { title: t("meta.build.16.title"), description: t("meta.build.16.description") },
+    "17": { title: t("meta.build.17.title"), description: t("meta.build.17.description") },
+    "18": { title: t("meta.build.18.title"), description: t("meta.build.18.description") },
+    "19": { title: t("meta.build.19.title"), description: t("meta.build.19.description") },
   };
 
   function selectedCard(build: CommunityBuild, slotIndex: number): CardData | undefined {
