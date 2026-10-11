@@ -12,6 +12,16 @@ npm run dev
 
 Create a production build with `npm run build`.
 
+## Deploy to GitHub Pages
+
+The `Build and deploy to GitHub Pages` workflow builds the site and deploys it
+whenever a commit is pushed to `main`. The production build uses the repository
+base path `/spam-deck-lab/`; local development remains at the Vite root.
+
+To enable deployment, open the repository's **Settings → Pages** and set
+**Build and deployment → Source** to **GitHub Actions**. The published site is
+then available at <https://flogrepro01.github.io/spam-deck-lab/>.
+
 ## Card data
 
 The app reads the latest English card catalogue from the public JSON files
