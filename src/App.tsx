@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { CardData, AppView, CardSortOption } from "./types";
 import { CardDetails } from "./components/cards/CardDetails";
+import { ActionNotification } from "./components/ActionNotification";
 import { AppShell } from "./components/layout/AppShell";
 import { CardLibrary } from "./features/cards/CardLibrary";
 import { DeckBuilder } from "./features/deck-builder/DeckBuilder";
@@ -38,8 +39,7 @@ function App() {
     savedDecks,
     savedDecksLoaded,
     storageError,
-    saveError,
-    deckSaved,
+    actionFeedback,
     saveCurrentDeck,
     loadSavedDeck,
     deleteSavedDeck,
@@ -52,12 +52,9 @@ function App() {
     selectTalent,
     addDeckCards,
     removeAlternative,
-    deckNotice,
     copied,
-    copyError,
     copyDeck,
     shareCopied,
-    shareError,
     shareUrl,
     shareDeck,
   } = useDeck(catalogue);
@@ -146,6 +143,11 @@ function App() {
 
   return (
     <div className="app-shell">
+      <ActionNotification
+        message={actionFeedback?.message ?? ""}
+        error={actionFeedback?.error}
+        revision={actionFeedback?.revision ?? 0}
+      />
       <AppShell activeView={activeView} deckCount={deckCount} onNavigate={navigateToView}>
         {activeView === "overview" && (
           <Overview
@@ -186,7 +188,6 @@ function App() {
             cards={filteredCards}
             deckCards={deckCards}
             deckCount={deckCount}
-            deckNotice={deckNotice}
             search={search}
             setSearch={setSearch}
             selectedElement={selectedElement}
@@ -204,14 +205,10 @@ function App() {
             onRemoveAlternative={removeAlternative}
             onSelectCard={setSelectedCard}
             copied={copied}
-            copyError={copyError}
             shareCopied={shareCopied}
-            shareError={shareError}
             shareUrl={shareUrl}
             deckName={deckName}
             setDeckName={setDeckName}
-            saveError={saveError}
-            deckSaved={deckSaved}
             onSave={saveCurrentDeck}
             onCopy={copyDeck}
             onShare={shareDeck}

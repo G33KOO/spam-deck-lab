@@ -28,6 +28,12 @@ export interface SavedDeck {
   updatedAt: string;
 }
 
+export interface ActionFeedback {
+  message: string;
+  error: boolean;
+  revision: number;
+}
+
 const SAVED_DECKS_STORAGE_KEY = "spam-deck-lab:saved-decks:v1";
 
 function getTalentSlot(
@@ -75,17 +81,19 @@ export function useDeck(catalogue: CardCatalogue | null) {
   const [savedDecks, setSavedDecks] = useState<SavedDeck[]>([]);
   const [savedDecksLoaded, setSavedDecksLoaded] = useState(false);
   const [storageErrorType, setStorageErrorType] = useState<"invalid" | "storage" | null>(null);
-  const [saveErrorType, setSaveErrorType] = useState<"empty" | "storage" | null>(null);
-  const [deckSaved, setDeckSaved] = useState(false);
   const [currentSavedDeckId, setCurrentSavedDeckId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [copyError, setCopyError] = useState("");
-  const [shareError, setShareError] = useState("");
-  const [deckNotice, setDeckNotice] = useState("");
   const [shareCopied, setShareCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [actionFeedback, setActionFeedback] = useState<ActionFeedback | null>(null);
+  const feedbackRevision = useRef(0);
   const sharedDeckLoaded = useRef(false);
   const nextSlotId = useRef(0);
+
+  function notifyAction(message: string, error = false) {
+    feedbackRevision.current += 1;
+    setActionFeedback({ message, error, revision: feedbackRevision.current });
+  }
 
   useEffect(() => {
     try {
@@ -94,16 +102,18 @@ export function useDeck(catalogue: CardCatalogue | null) {
         const parsed: unknown = JSON.parse(storedValue);
         if (!Array.isArray(parsed) || !parsed.every(isSavedDeck)) {
           setStorageErrorType("invalid");
+          notifyAction(t("builder.invalidSavedDecks"), true);
           return;
         }
         setSavedDecks(parsed);
       }
     } catch {
       setStorageErrorType("storage");
+      notifyAction(t("builder.storageError"), true);
     } finally {
       setSavedDecksLoaded(true);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!catalogue || sharedDeckLoaded.current) return;
@@ -118,12 +128,12 @@ export function useDeck(catalogue: CardCatalogue | null) {
     const sharedName = (params.get("n") ?? params.get("name"))?.trim();
     if (sharedName) setDeckName(sharedName.slice(0, 60));
     if (!sharedDeck) {
-      setShareError(t("builder.sharedEmpty"));
+      notifyAction(t("builder.sharedEmpty"), true);
       return;
     }
 
     if (!/^\d{0,4}$/.test(sharedTalents)) {
-      setShareError(t("builder.sharedInvalid", { entry: `t=${sharedTalents}` }));
+      notifyAction(t("builder.sharedInvalid", { entry: `t=${sharedTalents}` }), true);
       return;
     }
 
@@ -153,14 +163,14 @@ export function useDeck(catalogue: CardCatalogue | null) {
           count < 1 ||
           !optionCards.some((card) => card?.id === selectedCard?.id)
         ) {
-          setShareError(t("builder.sharedInvalid", { entry }));
+          notifyAction(t("builder.sharedInvalid", { entry }), true);
           return;
         }
       }
 
       const validOptionCards = optionCards.filter((card): card is CardData => card !== undefined);
       if (!selectedCard || validOptionCards.length !== optionCards.length) {
-        setShareError(t("builder.sharedInvalid", { entry }));
+        notifyAction(t("builder.sharedInvalid", { entry }), true);
         return;
       }
 
@@ -180,7 +190,7 @@ export function useDeck(catalogue: CardCatalogue | null) {
         selectedTalentSlot !== null &&
         !selectedCard.talents?.some((talent, index) => getTalentSlot(talent, index) === selectedTalentSlot)
       ) {
-        setShareError(t("builder.sharedInvalid", { entry: `t=${talentCode}` }));
+        notifyAction(t("builder.sharedInvalid", { entry: `t=${talentCode}` }), true);
         return;
       }
       nextSlots.push({
@@ -191,7 +201,7 @@ export function useDeck(catalogue: CardCatalogue | null) {
       });
     }
     if (adjustedDeck) {
-      setDeckNotice(t("builder.adjustedMessage"));
+      notifyAction(`${t("builder.sharedAdjusted")} ${t("builder.adjustedMessage")}`);
     }
     setSlots(nextSlots);
   }, [catalogue, t]);
@@ -225,7 +235,6 @@ export function useDeck(catalogue: CardCatalogue | null) {
 
   function updateDeckName(name: string) {
     setDeckName(name);
-    setDeckSaved(false);
   }
 
   function persistSavedDecks(nextDecks: SavedDeck[]): boolean {
@@ -241,14 +250,12 @@ export function useDeck(catalogue: CardCatalogue | null) {
   }
 
   function saveCurrentDeck(): boolean {
-    setSaveErrorType(null);
-    setDeckSaved(false);
     if (!deckCards.length) {
-      setSaveErrorType("empty");
+      notifyAction(t("builder.saveEmpty"), true);
       return false;
     }
     if (!savedDecksLoaded || storageErrorType) {
-      setSaveErrorType("storage");
+      notifyAction(t("builder.storageError"), true);
       return false;
     }
 
@@ -270,16 +277,15 @@ export function useDeck(catalogue: CardCatalogue | null) {
       ...savedDecks.filter((item) => item.id !== id),
     ];
     if (!persistSavedDecks(nextDecks)) {
-      setSaveErrorType("storage");
+      notifyAction(t("builder.storageError"), true);
       return false;
     }
     setCurrentSavedDeckId(id);
-    setDeckSaved(true);
+    notifyAction(t("builder.deckSaved"));
     return true;
   }
 
   function loadSavedDeck(id: string): boolean {
-    setSaveErrorType(null);
     const savedDeck = savedDecks.find((item) => item.id === id);
     if (!catalogue || !savedDeck) return false;
 
@@ -298,6 +304,7 @@ export function useDeck(catalogue: CardCatalogue | null) {
           ))
       ) {
         setStorageErrorType("invalid");
+        notifyAction(t("builder.invalidSavedDecks"), true);
         return false;
       }
       nextSlots.push({
@@ -311,19 +318,23 @@ export function useDeck(catalogue: CardCatalogue | null) {
     setSlots(nextSlots);
     setDeckName(savedDeck.name);
     setCurrentSavedDeckId(savedDeck.id);
-    setDeckSaved(false);
-    setShareError("");
+    notifyAction(t("builder.deckLoaded"));
     return true;
   }
 
   function deleteSavedDeck(id: string): boolean {
     if (storageErrorType || !savedDecksLoaded) {
       setStorageErrorType("storage");
+      notifyAction(t("builder.storageError"), true);
       return false;
     }
     const nextDecks = savedDecks.filter((savedDeck) => savedDeck.id !== id);
-    if (!persistSavedDecks(nextDecks)) return false;
+    if (!persistSavedDecks(nextDecks)) {
+      notifyAction(t("builder.storageError"), true);
+      return false;
+    }
     if (currentSavedDeckId === id) setCurrentSavedDeckId(null);
+    notifyAction(t("builder.deckDeleted"));
     return true;
   }
 
@@ -331,14 +342,10 @@ export function useDeck(catalogue: CardCatalogue | null) {
     setSlots([]);
     setDeckName("Untitled deck");
     setCurrentSavedDeckId(null);
-    setDeckSaved(false);
-    setSaveErrorType(null);
-    setShareError("");
     setShareUrl("");
   }
 
   function changeDeck(card: CardData, amount: number) {
-    setDeckSaved(false);
     setSlots((current) => {
       const matching = current.find((slot) => slot.selectedCardId === card.id);
       if (amount <= 0) {
@@ -358,7 +365,6 @@ export function useDeck(catalogue: CardCatalogue | null) {
   }
 
   function addDeckCards(cards: Array<{ card: CardData; talentSlot?: number }>) {
-    setDeckSaved(false);
     setSlots((current) => {
       const next = [...current];
       cards.forEach(({ card, talentSlot }) => {
@@ -381,7 +387,6 @@ export function useDeck(catalogue: CardCatalogue | null) {
   }
 
   function addAlternative(slotId: string, card: CardData) {
-    setDeckSaved(false);
     setSlots((current) => current.map((slot) => {
       if (
         slot.id !== slotId ||
@@ -393,7 +398,6 @@ export function useDeck(catalogue: CardCatalogue | null) {
   }
 
   function selectAlternative(slotId: string, cardId: string) {
-    setDeckSaved(false);
     setSlots((current) => current.map((slot) =>
       slot.id === slotId && slot.cardIds.includes(cardId)
         ? { ...slot, selectedCardId: cardId, selectedTalentSlot: null }
@@ -402,7 +406,6 @@ export function useDeck(catalogue: CardCatalogue | null) {
   }
 
   function selectTalent(slotId: string, talentSlot: number | null) {
-    setDeckSaved(false);
     setSlots((current) => current.map((slot) => {
       if (slot.id !== slotId) return slot;
       const card = catalogue?.cards.find((item) => item.id === slot.selectedCardId);
@@ -415,7 +418,6 @@ export function useDeck(catalogue: CardCatalogue | null) {
   }
 
   function removeAlternative(slotId: string, cardId: string) {
-    setDeckSaved(false);
     setSlots((current) => current.map((slot) =>
       slot.id === slotId && slot.selectedCardId !== cardId
         ? { ...slot, cardIds: slot.cardIds.filter((id) => id !== cardId) }
@@ -424,9 +426,8 @@ export function useDeck(catalogue: CardCatalogue | null) {
   }
 
   async function copyDeck() {
-    setCopyError("");
     if (!deckCards.length) {
-      setCopyError(t("builder.copyEmpty"));
+      notifyAction(t("builder.copyEmpty"), true);
       return;
     }
 
@@ -444,18 +445,18 @@ export function useDeck(catalogue: CardCatalogue | null) {
     try {
       await navigator.clipboard.writeText(deckText);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1800);
+      window.setTimeout(() => setCopied(false), 10_000);
+      notifyAction(t("builder.listCopied"));
     } catch {
-      setCopyError(t("builder.clipboardError"));
+      notifyAction(`${t("builder.copyErrorTitle")} ${t("builder.clipboardError")}`, true);
     }
   }
 
   async function shareDeck() {
-    setShareError("");
     setShareCopied(false);
     setShareUrl("");
     if (!deckCards.length) {
-      setShareError(t("builder.shareEmpty"));
+      notifyAction(t("builder.shareEmpty"), true);
       return;
     }
 
@@ -481,9 +482,10 @@ export function useDeck(catalogue: CardCatalogue | null) {
     try {
       await navigator.clipboard.writeText(url.toString());
       setShareCopied(true);
-      window.setTimeout(() => setShareCopied(false), 1800);
+      window.setTimeout(() => setShareCopied(false), 10_000);
+      notifyAction(t("builder.linkCopied"));
     } catch {
-      setShareError(t("builder.clipboardError"));
+      notifyAction(`${t("builder.shareErrorTitle")} ${t("builder.clipboardError")}`, true);
     }
   }
 
@@ -496,10 +498,6 @@ export function useDeck(catalogue: CardCatalogue | null) {
     storageError: storageErrorType
       ? t(storageErrorType === "invalid" ? "builder.invalidSavedDecks" : "builder.storageError")
       : "",
-    saveError: saveErrorType
-      ? t(saveErrorType === "empty" ? "builder.saveEmpty" : "builder.storageError")
-      : "",
-    deckSaved,
     saveCurrentDeck,
     loadSavedDeck,
     deleteSavedDeck,
@@ -513,12 +511,10 @@ export function useDeck(catalogue: CardCatalogue | null) {
     addDeckCards,
     removeAlternative,
     copied,
-    copyError,
     copyDeck,
     shareCopied,
-    shareError,
-    deckNotice,
     shareUrl,
     shareDeck,
+    actionFeedback,
   };
 }

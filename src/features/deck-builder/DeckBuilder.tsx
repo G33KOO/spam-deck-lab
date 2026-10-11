@@ -11,7 +11,6 @@ export function DeckBuilder({
   cards,
   deckCards,
   deckCount,
-  deckNotice,
   search,
   setSearch,
   selectedElement,
@@ -29,14 +28,10 @@ export function DeckBuilder({
   onRemoveAlternative,
   onSelectCard,
   copied,
-  copyError,
   shareCopied,
-  shareError,
   shareUrl,
   deckName,
   setDeckName,
-  saveError,
-  deckSaved,
   onSave,
   onCopy,
   onShare,
@@ -47,7 +42,6 @@ export function DeckBuilder({
   cards: CardData[];
   deckCards: DeckCardSlot[];
   deckCount: number;
-  deckNotice: string;
   search: string;
   setSearch: (value: string) => void;
   selectedElement: string;
@@ -65,14 +59,10 @@ export function DeckBuilder({
   onRemoveAlternative: (slotId: string, cardId: string) => void;
   onSelectCard: (card: CardData) => void;
   copied: boolean;
-  copyError: string;
   shareCopied: boolean;
-  shareError: string;
   shareUrl: string;
   deckName: string;
   setDeckName: (value: string) => void;
-  saveError: string;
-  deckSaved: boolean;
   onSave: () => boolean;
   onCopy: () => void;
   onShare: () => void;
@@ -99,11 +89,6 @@ export function DeckBuilder({
         description={t("builder.description")}
       />
       <DataNotice error={error} />
-      {deckNotice && <div className="notice" role="status"><strong>{t("builder.sharedAdjusted")}</strong> {deckNotice}</div>}
-      {copyError && <div className="notice error-notice" role="alert"><strong>{t("builder.copyErrorTitle")}</strong> {copyError}</div>}
-      {shareError && <div className="notice error-notice" role="alert"><strong>{t("builder.shareErrorTitle")}</strong> {shareError}</div>}
-      {saveError && <div className="notice error-notice" role="alert">{saveError}</div>}
-      {deckSaved && <div className="notice" role="status">{t("builder.deckSaved")}</div>}
       {!catalogue && !error ? <LoadingState /> : catalogue && (
         <>
           <div className="builder-layout">
