@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import type { CardCatalogue, CardData, AppView } from "../../types";
+import type { CardCatalogue, CardData } from "../../types";
 import { CardTile } from "../../components/cards/CardTile";
 import { DataNotice, LoadingState, PageHeader, SearchIcon } from "../../components/ui";
 import { imageUrl } from "../../lib/cardAssets";
 import { useTranslation } from "../../i18n/LanguageContext";
-import type { DeckCardSlot } from "../../hooks/useDeck";
+import type { SavedDeckDraftSlot } from "../../hooks/useDeck";
 
 export interface BuildCardOption {
   slug?: string;
@@ -174,20 +174,14 @@ export function MetaWatch({
   catalogue,
   error,
   elementName,
-  onNavigate,
   onSelectCard,
-  onAddCards,
-  deckCards,
-  deckCount,
+  onSaveBuild,
 }: {
   catalogue: CardCatalogue | null;
   error: string;
   elementName: (id: string) => string;
-  onNavigate: (view: AppView) => void;
   onSelectCard: (card: CardData) => void;
-  onAddCards: (cards: Array<{ card: CardData; talentSlot?: number }>) => void;
-  deckCards: DeckCardSlot[];
-  deckCount: number;
+  onSaveBuild: (name: string, slots: SavedDeckDraftSlot[], hasUnidentifiedCards: boolean) => boolean;
 }) {
   const { t } = useTranslation();
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
@@ -233,27 +227,26 @@ export function MetaWatch({
     });
   }
 
-  function addableCards(build: CommunityBuild) {
-    const usedIds = new Set(deckCards.flatMap((slot) => [
-      slot.card.id,
-      ...slot.alternatives.map((card) => card.id),
-    ]));
-    const seenIds = new Set<string>();
-    return build.slots.flatMap((slot, slotIndex) => {
-      const card = selectedCard(build, slotIndex);
-      if (!card || usedIds.has(card.id) || seenIds.has(card.id)) return [];
-      seenIds.add(card.id);
-      return [{ card, talentSlot: slot.talentSlot }];
-    }).slice(0, Math.max(0, 4 - deckCount));
-  }
-
-  function addBuild(build: CommunityBuild) {
+  function saveBuild(build: CommunityBuild) {
     if (!catalogue) return;
-    const cards = addableCards(build);
-    if (cards.length) {
-      onAddCards(cards);
-      onNavigate("builder");
-    }
+    let hasUnidentifiedCards = false;
+    const slots = build.slots.flatMap((slot, slotIndex) => {
+      const cards = slotCards(build, slotIndex);
+      const card = selectedCard(build, slotIndex) ?? cards[0];
+      if (cards.length !== slot.options.length || !card) hasUnidentifiedCards = true;
+      if (!card) return [];
+
+      const talentSlot = slot.talentSlot !== undefined &&
+        card.talents?.some((talent, index) => (talent.slot ?? index + 1) === slot.talentSlot)
+        ? slot.talentSlot
+        : null;
+      return [{ cards, selectedCard: card, talentSlot }];
+    });
+    onSaveBuild(
+      buildCopy[build.id as keyof typeof buildCopy].title,
+      slots,
+      hasUnidentifiedCards,
+    );
   }
 
   useEffect(() => {
@@ -437,7 +430,7 @@ export function MetaWatch({
           {visibleBuilds.length > 0 ? (
           <div className="community-build-grid">
             {visibleBuilds.map((build) => {
-              const addableCount = addableCards(build).length;
+              const hasIdentifiedCards = build.slots.some((_, slotIndex) => slotCards(build, slotIndex).length > 0);
               return (
                 <article className="community-build" key={build.id}>
                   <div className="community-build-header">
@@ -520,10 +513,10 @@ export function MetaWatch({
                   )}
                   <button
                     className="primary-button build-add-button"
-                    disabled={!addableCount}
-                    onClick={() => addBuild(build)}
+                    disabled={!hasIdentifiedCards}
+                    onClick={() => saveBuild(build)}
                   >
-                    {t(addableCount === 1 ? "meta.addAvailableOne" : "meta.addAvailableMany", { count: addableCount })} <span>↗</span>
+                    {t("meta.saveBuild")} <span>↗</span>
                   </button>
                 </article>
               );

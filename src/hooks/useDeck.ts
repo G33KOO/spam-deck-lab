@@ -28,6 +28,12 @@ export interface SavedDeck {
   updatedAt: string;
 }
 
+export interface SavedDeckDraftSlot {
+  cards: CardData[];
+  selectedCard: CardData;
+  talentSlot: number | null;
+}
+
 export interface ActionFeedback {
   message: string;
   error: boolean;
@@ -35,6 +41,14 @@ export interface ActionFeedback {
 }
 
 const SAVED_DECKS_STORAGE_KEY = "spam-deck-lab:saved-decks:v1";
+
+function isQuotaExceededError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const name = "name" in error && typeof error.name === "string" ? error.name : "";
+  const code = "code" in error && typeof error.code === "number" ? error.code : 0;
+  return name === "QuotaExceededError" || name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+    code === 22 || code === 1014;
+}
 
 function getTalentSlot(
   talent: NonNullable<CardData["talents"]>[number],
@@ -80,7 +94,7 @@ export function useDeck(catalogue: CardCatalogue | null) {
   const [deckName, setDeckName] = useState("Untitled deck");
   const [savedDecks, setSavedDecks] = useState<SavedDeck[]>([]);
   const [savedDecksLoaded, setSavedDecksLoaded] = useState(false);
-  const [storageErrorType, setStorageErrorType] = useState<"invalid" | "storage" | null>(null);
+  const [storageErrorType, setStorageErrorType] = useState<"invalid" | "storage" | "full" | null>(null);
   const [currentSavedDeckId, setCurrentSavedDeckId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -93,6 +107,11 @@ export function useDeck(catalogue: CardCatalogue | null) {
   function notifyAction(message: string, error = false) {
     feedbackRevision.current += 1;
     setActionFeedback({ message, error, revision: feedbackRevision.current });
+  }
+
+  function storageErrorMessage(type: "invalid" | "storage" | "full") {
+    if (type === "invalid") return t("builder.invalidSavedDecks");
+    return t(type === "full" ? "builder.storageFullError" : "builder.storageError");
   }
 
   useEffect(() => {
@@ -109,7 +128,7 @@ export function useDeck(catalogue: CardCatalogue | null) {
       }
     } catch {
       setStorageErrorType("storage");
-      notifyAction(t("builder.storageError"), true);
+      notifyAction(storageErrorMessage("storage"), true);
     } finally {
       setSavedDecksLoaded(true);
     }
@@ -243,8 +262,10 @@ export function useDeck(catalogue: CardCatalogue | null) {
       setSavedDecks(nextDecks);
       setStorageErrorType(null);
       return true;
-    } catch {
-      setStorageErrorType("storage");
+    } catch (error) {
+      const errorType = isQuotaExceededError(error) ? "full" : "storage";
+      setStorageErrorType(errorType);
+      notifyAction(storageErrorMessage(errorType), true);
       return false;
     }
   }
@@ -255,7 +276,7 @@ export function useDeck(catalogue: CardCatalogue | null) {
       return false;
     }
     if (!savedDecksLoaded || storageErrorType) {
-      notifyAction(t("builder.storageError"), true);
+      notifyAction(storageErrorMessage(storageErrorType ?? "storage"), true);
       return false;
     }
 
@@ -276,12 +297,54 @@ export function useDeck(catalogue: CardCatalogue | null) {
       savedDeck,
       ...savedDecks.filter((item) => item.id !== id),
     ];
-    if (!persistSavedDecks(nextDecks)) {
-      notifyAction(t("builder.storageError"), true);
-      return false;
-    }
+    if (!persistSavedDecks(nextDecks)) return false;
     setCurrentSavedDeckId(id);
     notifyAction(t("builder.deckSaved"));
+    return true;
+  }
+
+  function saveCommunityDeck(
+    name: string,
+    slots: SavedDeckDraftSlot[],
+    hasUnidentifiedCards: boolean,
+  ): boolean {
+    if (!savedDecksLoaded || storageErrorType) {
+      notifyAction(storageErrorMessage(storageErrorType ?? "storage"), true);
+      return false;
+    }
+
+    const usedSlugs = new Set<string>();
+    const savedSlots = slots.flatMap(({ cards, selectedCard, talentSlot }) => {
+      const cardSlugs = [...new Set(cards.map((card) => card.slug))]
+        .filter((slug) => !usedSlugs.has(slug));
+      if (!cardSlugs.includes(selectedCard.slug)) return [];
+      if (
+        talentSlot !== null &&
+        !selectedCard.talents?.some((talent, index) => getTalentSlot(talent, index) === talentSlot)
+      ) return [];
+
+      cardSlugs.forEach((slug) => usedSlugs.add(slug));
+      return [{ cardSlugs, selectedSlug: selectedCard.slug, talentSlot }];
+    });
+
+    if (!savedSlots.length) {
+      notifyAction(t("builder.saveEmpty"), true);
+      return false;
+    }
+
+    const savedDeck: SavedDeck = {
+      id: crypto.randomUUID(),
+      name: name.trim().slice(0, 60) || t("meta.title"),
+      slots: savedSlots,
+      updatedAt: new Date().toISOString(),
+    };
+    if (!persistSavedDecks([savedDeck, ...savedDecks])) return false;
+
+    notifyAction(t(
+      hasUnidentifiedCards
+        ? "builder.communityDeckSavedPartial"
+        : "builder.communityDeckSaved",
+    ));
     return true;
   }
 
@@ -323,16 +386,17 @@ export function useDeck(catalogue: CardCatalogue | null) {
   }
 
   function deleteSavedDeck(id: string): boolean {
-    if (storageErrorType || !savedDecksLoaded) {
+    if (
+      !savedDecksLoaded ||
+      storageErrorType === "invalid" ||
+      storageErrorType === "storage"
+    ) {
       setStorageErrorType("storage");
-      notifyAction(t("builder.storageError"), true);
+      notifyAction(storageErrorMessage("storage"), true);
       return false;
     }
     const nextDecks = savedDecks.filter((savedDeck) => savedDeck.id !== id);
-    if (!persistSavedDecks(nextDecks)) {
-      notifyAction(t("builder.storageError"), true);
-      return false;
-    }
+    if (!persistSavedDecks(nextDecks)) return false;
     if (currentSavedDeckId === id) setCurrentSavedDeckId(null);
     notifyAction(t("builder.deckDeleted"));
     return true;
@@ -496,9 +560,10 @@ export function useDeck(catalogue: CardCatalogue | null) {
     savedDecks,
     savedDecksLoaded,
     storageError: storageErrorType
-      ? t(storageErrorType === "invalid" ? "builder.invalidSavedDecks" : "builder.storageError")
+      ? storageErrorMessage(storageErrorType)
       : "",
     saveCurrentDeck,
+    saveCommunityDeck,
     loadSavedDeck,
     deleteSavedDeck,
     startNewDeck,

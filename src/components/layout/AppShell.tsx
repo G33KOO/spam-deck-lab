@@ -17,11 +17,15 @@ const OFFICIAL_TERMS = "https://spamgame.com/conditions-donnees-cartes";
 export function AppShell({
   activeView,
   deckCount,
+  savedDeckCount,
+  savedDecksLoaded,
   onNavigate,
   children,
 }: {
   activeView: AppView;
   deckCount: number;
+  savedDeckCount: number;
+  savedDecksLoaded: boolean;
   onNavigate: (view: AppView) => void;
   children: ReactNode;
 }) {
@@ -63,6 +67,11 @@ export function AppShell({
                 <span>{t(item.labelKey)}</span>
                 {item.id === "builder" && deckCount > 0 && (
                   <span className="nav-count">{deckCount}</span>
+                )}
+                {item.id === "saved" && savedDecksLoaded && (
+                  <span className="nav-count" aria-label={t("shell.savedDeckCount", { count: savedDeckCount })}>
+                    {savedDeckCount}
+                  </span>
                 )}
               </button>
             ))}

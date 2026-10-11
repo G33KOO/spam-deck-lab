@@ -198,7 +198,6 @@ export function DeckBuilder({
               </div>
               <div className="deck-meter">
                 <div><strong>{String(deckCount).padStart(2, "0")}</strong><span>{t("builder.cardSlots")}</span></div>
-                <span className="meter-caption">{t("builder.deckRules")}</span>
               </div>
               {deckCards.length ? (
                 <div className="deck-card-grid">
@@ -214,7 +213,6 @@ export function DeckBuilder({
                       />
                       {card.talents?.length ? (
                         <label className="deck-talent-picker">
-                          <span>{t("builder.talent")}</span>
                           <select
                             value={selectedTalentSlot ?? ""}
                             onChange={(event) => onSelectTalent(id, event.target.value ? Number(event.target.value) : null)}

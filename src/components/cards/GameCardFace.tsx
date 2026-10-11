@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { createPortal } from "react-dom";
 import type { CardData } from "../../types";
@@ -18,7 +18,9 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
     meta?: TooltipMeta[];
     left: number;
     top: number;
+    centerY: number;
   } | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const dismissTimer = useRef<number | null>(null);
   const { language, t } = useTranslation();
   const resist = card.resistances[card.element];
@@ -32,7 +34,7 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       cooldown: ability.cooldown,
       meta: [
         ability.cooldown !== undefined
-          ? { icon: "img/frame/cooldown.webp", label: t("card.cooldown", { count: ability.cooldown }) }
+          ? { label: t("card.cooldown", { count: ability.cooldown }) }
           : undefined,
         ability.precision !== undefined
           ? { label: t("card.precision", { count: ability.precision }) }
@@ -63,6 +65,19 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
     if (dismissTimer.current !== null) window.clearTimeout(dismissTimer.current);
   }, []);
 
+  useLayoutEffect(() => {
+    if (!hoverInfo || !tooltipRef.current) return;
+    const margin = 12;
+    const height = tooltipRef.current.offsetHeight;
+    const top = Math.min(
+      Math.max(margin, hoverInfo.centerY - height / 2),
+      window.innerHeight - height - margin,
+    );
+    if (top !== hoverInfo.top) {
+      setHoverInfo((current) => current ? { ...current, top } : current);
+    }
+  }, [hoverInfo]);
+
   function showHoverInfo(
     event: ReactMouseEvent<HTMLElement>,
     info: { title: string; effect: string; meta?: TooltipMeta[] },
@@ -74,7 +89,7 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
     const margin = 12;
     const gap = 12;
     const width = Math.min(340, window.innerWidth - margin * 2);
-    const height = Math.min(190, window.innerHeight - margin * 2);
+    const height = Math.min(235, window.innerHeight - margin * 2);
     let left = anchor.right + gap;
     if (left + width > window.innerWidth - margin) {
       left = anchor.left - width - gap;
@@ -89,7 +104,7 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       Math.max(margin, anchor.top + (anchor.height - height) / 2),
       window.innerHeight - height - margin,
     );
-    setHoverInfo({ ...info, left, top });
+    setHoverInfo({ ...info, left, top, centerY: anchor.top + anchor.height / 2 });
   }
 
   function scheduleTooltipDismissal() {
@@ -181,6 +196,7 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
           <div
             className="game-card-interaction-tooltip"
             role="tooltip"
+            ref={tooltipRef}
             style={{ left: hoverInfo.left, top: hoverInfo.top }}
             onMouseEnter={keepTooltipVisible}
             onMouseLeave={scheduleTooltipDismissal}

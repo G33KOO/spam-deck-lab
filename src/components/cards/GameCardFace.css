@@ -250,10 +250,11 @@
   z-index: 10000;
   display: flex;
   width: min(340px, calc(100vw - 24px));
-  height: min(190px, calc(100vh - 24px));
+  height: auto;
+  max-height: min(235px, calc(100vh - 24px));
   flex-direction: column;
   gap: 9px;
-  overflow-y: auto;
+  overflow: auto;
   padding: 15px 17px;
   border: 1px solid rgba(217, 255, 87, 0.5);
   border-radius: 8px;
@@ -274,7 +275,7 @@
 
 .game-card-interaction-tooltip small {
   color: #c8cebf;
-  font-size: 12px;
+  font-size: var(--text-min);
 }
 
 .game-card-interaction-tooltip-meta {

@@ -41,6 +41,7 @@ function App() {
     storageError,
     actionFeedback,
     saveCurrentDeck,
+    saveCommunityDeck,
     loadSavedDeck,
     deleteSavedDeck,
     startNewDeck,
@@ -50,7 +51,6 @@ function App() {
     addAlternative,
     selectAlternative,
     selectTalent,
-    addDeckCards,
     removeAlternative,
     copied,
     copyDeck,
@@ -148,7 +148,13 @@ function App() {
         error={actionFeedback?.error}
         revision={actionFeedback?.revision ?? 0}
       />
-      <AppShell activeView={activeView} deckCount={deckCount} onNavigate={navigateToView}>
+      <AppShell
+        activeView={activeView}
+        deckCount={deckCount}
+        savedDeckCount={savedDecks.length}
+        savedDecksLoaded={savedDecksLoaded}
+        onNavigate={navigateToView}
+      >
         {activeView === "overview" && (
           <Overview
             catalogue={catalogue}
@@ -236,11 +242,8 @@ function App() {
           <MetaWatch
             catalogue={catalogue}
             error={loadError}
-            onNavigate={navigateToView}
             onSelectCard={setSelectedCard}
-            onAddCards={addDeckCards}
-            deckCards={deckCards}
-            deckCount={deckCount}
+            onSaveBuild={saveCommunityDeck}
             elementName={elementName}
           />
         )}
