@@ -149,6 +149,24 @@ const communityBuilds: CommunityBuild[] = [
         { options: [{ slug: "maitre_thronebeur", label: "Maître Thronebéur" }] },
       ],
     },
+    {
+      id: "13",
+      slots: [
+        { options: [{ slug: "girafe_florale", label: "Girafe florale" }] },
+        { options: [{ slug: "lame_de_la_foret", label: "Lame de la forêt" }] },
+        { options: [{ slug: "soigneuse_astrale_des_bois", label: "Soigneuse astrale des bois" }] },
+        { options: [{ slug: "lapin_plume", label: "Lapin plume" }] },
+      ],
+    },
+    {
+      id: "14",
+      slots: [
+        { options: [{ slug: "princesse_meridia", label: "Princesse Meridia" }] },
+        { options: [{ slug: "fleurmarine", label: "Fleurmarine" }] },
+        { options: [{ slug: "zombie_floral", label: "Zombie floral" }] },
+        { options: [{ slug: "girafe_florale", label: "Girafe florale" }] },
+      ],
+    },
 ];
 
 export function MetaWatch({
@@ -191,6 +209,8 @@ export function MetaWatch({
     "10": { title: t("meta.build.10.title"), description: t("meta.build.10.description") },
     "11": { title: t("meta.build.11.title"), description: t("meta.build.11.description") },
     "12": { title: t("meta.build.12.title"), description: t("meta.build.12.description") },
+    "13": { title: t("meta.build.13.title"), description: t("meta.build.13.description") },
+    "14": { title: t("meta.build.14.title"), description: t("meta.build.14.description") },
   };
 
   function selectedCard(build: CommunityBuild, slotIndex: number): CardData | undefined {
@@ -347,7 +367,7 @@ export function MetaWatch({
                           <img src={imageUrl(card.artwork.tiny)} alt="" loading="lazy" />
                           <span>
                             <strong>{card.name}</strong>
-                            <small>{elementName(card.element)} · {card.rarity}</small>
+                            <small>{elementName(card.element)} · {catalogue.rarities.find((rarity) => rarity.id === card.rarity)?.name ?? card.rarity}</small>
                           </span>
                           <i aria-hidden="true">{isSelected ? "✓" : "+"}</i>
                         </button>

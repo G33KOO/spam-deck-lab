@@ -17,7 +17,8 @@ function getViewFromLocation(): AppView {
   const route = window.location.hash.slice(1).split("?")[0].replace(/^\/+/, "");
   const requestedView = appViews.find((view) => view === route);
   if (requestedView) return requestedView;
-  return new URLSearchParams(window.location.search).has("deck") ? "builder" : "overview";
+  const params = new URLSearchParams(window.location.search);
+  return params.has("deck") || params.has("d") ? "builder" : "overview";
 }
 
 function App() {
@@ -50,7 +51,25 @@ function App() {
   } = useDeck(catalogue);
 
   useEffect(() => {
-    const syncView = () => setActiveView(getViewFromLocation());
+    if (!catalogue || !selectedCard) return;
+    const localizedCard = catalogue.cards.find((card) => card.id === selectedCard.id);
+    if (localizedCard && localizedCard !== selectedCard) setSelectedCard(localizedCard);
+  }, [catalogue, selectedCard]);
+
+  useEffect(() => {
+    const syncView = () => {
+      const view = getViewFromLocation();
+      setActiveView(view);
+      const route = `#/${view}`;
+      if (window.location.hash !== route) {
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}${window.location.search}${route}`,
+        );
+      }
+    };
+    syncView();
     window.addEventListener("hashchange", syncView);
     window.addEventListener("popstate", syncView);
     return () => {

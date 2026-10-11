@@ -6,7 +6,7 @@ import "./GameCardFace.css";
 
 export function GameCardFace({ card, elementLabel }: { card: CardData; elementLabel: string }) {
   const [hoverInfo, setHoverInfo] = useState<{ title: string; effect: string; meta?: string } | null>(null);
-  const { t } = useTranslation();
+  const { language, t } = useTranslation();
   const resist = card.resistances[card.element];
   const resistance = resist === undefined ? t("card.notListed") : `${resist}%`;
   const rows = [
@@ -28,7 +28,7 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       name: skill.name,
       effect: skill.effect,
       rarity: skill.rarity ?? "common",
-      meta: skill.rarity ? t("card.passiveRarity", { rarity: rarityNameForCard(skill.rarity) }) : t("card.passiveSkill"),
+      meta: skill.rarity ? t("card.passiveRarity", { rarity: rarityNameForCard(skill.rarity, language) }) : t("card.passiveSkill"),
     })),
   ].slice(0, 3);
 
@@ -105,7 +105,7 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       <img
         className="game-card-rarity"
         src={imageUrl(`img/frame/rarity-${card.rarity}.webp`)}
-        alt={card.rarity}
+        alt=""
       />
       {hoverInfo && (
         <div className="game-card-interaction-tooltip" aria-live="polite">
@@ -118,6 +118,9 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
   );
 }
 
-export function rarityNameForCard(rarity: string): string {
-  return rarity.charAt(0).toUpperCase() + rarity.slice(1);
+export function rarityNameForCard(rarity: string, language: "fr" | "en" = "en"): string {
+  const names = language === "fr"
+    ? { common: "commun", rare: "rare", epic: "épique", legendary: "légendaire", divine: "divin" }
+    : { common: "common", rare: "rare", epic: "epic", legendary: "legendary", divine: "divine" };
+  return names[rarity.toLowerCase() as keyof typeof names] ?? rarity.charAt(0).toUpperCase() + rarity.slice(1);
 }

@@ -4,12 +4,13 @@ A React companion for SPAM with a searchable card library, detailed card views,
 and a lightweight deck builder.
 
 The interface is available in French and English (French by default). Card
-names and descriptions remain in the language supplied by the official card
-catalogue.
+names, descriptions, elements, and rarities follow the selected language using
+the corresponding official catalogue.
 
 Each menu page has a shareable hash route (`#/overview`, `#/cards`, `#/builder`,
-`#/meta`, and `#/tips`). Hash routing keeps direct links and browser refreshes
-working on GitHub Pages without a server-side fallback. Browser back and forward
+`#/meta`, and `#/tips`). The root URL defaults to the home page and is normalized
+to `#/overview`. Hash routing keeps direct links and browser refreshes working
+on GitHub Pages without a server-side fallback. Browser back and forward
 navigation also restore the selected page.
 
 ## Run locally
@@ -46,9 +47,9 @@ tips** page collects the submitted gameplay advice.
 
 Decks in the builder stay in the current browser session. Build up to four
 cards and set optional alternatives for each slot. Use **Share Link** to copy
-a URL containing the deck name, card slugs, and alternatives; opening that
-link reconstructs the deck without a backend. **Copy List** exports a
-plain-text card list.
+a compact URL containing short card-number codes and optional alternatives;
+opening that link reconstructs the deck without a backend. Older shared links
+using card slugs remain supported. **Copy List** exports a plain-text card list.
 
 ## Project structure
 

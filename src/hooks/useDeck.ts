@@ -32,10 +32,11 @@ export function useDeck(catalogue: CardCatalogue | null) {
     sharedDeckLoaded.current = true;
 
     const params = new URLSearchParams(window.location.search);
-    const sharedDeck = params.get("deck");
+    const compactDeck = params.get("d");
+    const sharedDeck = compactDeck ?? params.get("deck");
     if (sharedDeck === null) return;
 
-    const sharedName = params.get("name")?.trim();
+    const sharedName = (params.get("n") ?? params.get("name"))?.trim();
     if (sharedName) setDeckName(sharedName.slice(0, 60));
     if (!sharedDeck) {
       setShareError(t("builder.sharedEmpty"));
@@ -45,26 +46,41 @@ export function useDeck(catalogue: CardCatalogue | null) {
     const nextSlots: DeckSlotState[] = [];
     let adjustedDeck = false;
     for (const entry of sharedDeck.split(",")) {
-      const [selectedSlug, countText, optionsText, ...unexpectedParts] = entry.split("~");
-      const count = Number(countText);
-      const optionSlugs = optionsText?.split("+") ?? [selectedSlug];
-      const optionCards = optionSlugs.map((slug) =>
-        catalogue.cards.find((card) => card.slug === slug),
-      );
-      const selectedCard = catalogue.cards.find((card) => card.slug === selectedSlug);
-      if (
-        unexpectedParts.length ||
-        !selectedCard ||
-        !Number.isSafeInteger(count) ||
-        count < 1 ||
-        optionCards.some((card) => !card) ||
-        !optionCards.some((card) => card?.id === selectedCard.id)
-      ) {
+      let selectedCard: CardData | undefined;
+      let optionCards: Array<CardData | undefined>;
+      let count = 1;
+
+      if (compactDeck !== null) {
+        optionCards = entry.split(".").map((numberCode) =>
+          catalogue.cards.find((card) => card.number.toString(36) === numberCode),
+        );
+        selectedCard = optionCards[0];
+      } else {
+        const [selectedSlug, countText, optionsText, ...unexpectedParts] = entry.split("~");
+        count = Number(countText);
+        const optionSlugs = optionsText?.split("+") ?? [selectedSlug];
+        optionCards = optionSlugs.map((slug) =>
+          catalogue.cards.find((card) => card.slug === slug),
+        );
+        selectedCard = catalogue.cards.find((card) => card.slug === selectedSlug);
+        if (
+          unexpectedParts.length ||
+          !Number.isSafeInteger(count) ||
+          count < 1 ||
+          !optionCards.some((card) => card?.id === selectedCard?.id)
+        ) {
+          setShareError(t("builder.sharedInvalid", { entry }));
+          return;
+        }
+      }
+
+      const validOptionCards = optionCards.filter((card): card is CardData => card !== undefined);
+      if (!selectedCard || validOptionCards.length !== optionCards.length) {
         setShareError(t("builder.sharedInvalid", { entry }));
         return;
       }
 
-      const cardIds = [...new Set(optionCards.map((card) => card!.id))];
+      const cardIds = [...new Set(validOptionCards.map((card) => card.id))];
       if (count > 1 || cardIds.length !== optionCards.length) adjustedDeck = true;
       if (nextSlots.length >= 4) {
         adjustedDeck = true;
@@ -192,16 +208,15 @@ export function useDeck(catalogue: CardCatalogue | null) {
     url.search = "";
     url.hash = "#/builder";
     url.searchParams.set(
-      "deck",
+      "d",
       deckCards
-        .map(({ card, alternatives }) => {
-          const options = [card, ...alternatives].map((option) => option.slug).join("+");
-          return `${card.slug}~1${alternatives.length ? `~${options}` : ""}`;
-        })
+        .map(({ card, alternatives }) =>
+          [card, ...alternatives].map((option) => option.number.toString(36)).join("."),
+        )
         .join(","),
     );
     if (deckName.trim() && deckName.trim() !== "Untitled deck") {
-      url.searchParams.set("name", deckName.trim());
+      url.searchParams.set("n", deckName.trim());
     }
     setShareUrl(url.toString());
     try {

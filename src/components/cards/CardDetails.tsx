@@ -107,7 +107,7 @@ export function CardDetails({
                   const style = catalogue.styles.find((item) => item.id === styleId);
                   return (
                     <span className="style-chip" key={styleId}>
-                      {styleLabel(styleId)}
+                      {styleLabel(styleId, language)}
                       {style?.alternative && <small>{t("details.alt")}</small>}
                     </span>
                   );
