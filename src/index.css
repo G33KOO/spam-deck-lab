@@ -4573,3 +4573,179 @@ kbd {
     padding-left: 3px;
   }
 }
+
+/* Tox list */
+.tox-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  padding: 24px 20px 48px;
+}
+
+.tox-card {
+  --tox-color: #9692a0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 20px 18px;
+  border: 1px solid color-mix(in srgb, var(--tox-color) 45%, #1b1d19);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--tox-color) 16%, transparent), transparent 62%),
+    #121411;
+  text-align: center;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.tox-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--tox-color);
+}
+
+.tox-common { --tox-color: #dddce1; }
+.tox-rare { --tox-color: #4fe6ff; }
+.tox-epic { --tox-color: #c06aff; }
+.tox-legendary { --tox-color: #ffc756; }
+.tox-divine { --tox-color: #ff7ad9; }
+
+.tox-icon {
+  display: grid;
+  width: 84px;
+  height: 84px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tox-color) 14%, #0c0d0b);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--tox-color) 35%, transparent);
+}
+
+.tox-icon img {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+}
+
+.tox-title {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.tox-title h2 {
+  margin: 0;
+  color: var(--tox-color);
+  font: 22px "Lilita One", system-ui, sans-serif;
+  text-transform: uppercase;
+}
+
+.tox-line {
+  display: block;
+  width: 56px;
+  height: 20px;
+  flex: 0 1 56px;
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+}
+
+.tox-line-left { background-position: left center; }
+.tox-line-right { background-position: right center; }
+
+.tox-rarity {
+  font-size: var(--text-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tox-effect {
+  margin: 0;
+  color: #e7eadf;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.rich-keyword {
+  border-bottom: 1px dotted currentColor;
+  cursor: help;
+  font-weight: 700;
+}
+
+.rich-icon {
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.2em;
+  vertical-align: -0.2em;
+}
+
+.tox-cards {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tox-cards strong {
+  color: #9aa092;
+  font-size: var(--text-min);
+  letter-spacing: 0.08em;
+}
+
+.tox-cards ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tox-cards button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 3px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: #1a1c18;
+  color: #e7eadf;
+  cursor: pointer;
+  font-size: var(--text-min);
+}
+
+.tox-cards button:hover {
+  border-color: #d9ff57;
+  color: #d9ff83;
+}
+
+.tox-cards button img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+@media (max-width: 1180px) {
+  .tox-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .tox-grid { grid-template-columns: minmax(0, 1fr); padding-inline: 0; }
+}
+@media (max-width: 590px) {
+  .page-header,
+  .section-heading {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .page-header > .primary-button,
+  .underlined-link {
+    max-width: 100%;
+    white-space: normal;
+  }
+}

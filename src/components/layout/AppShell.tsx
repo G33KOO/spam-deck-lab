@@ -2,13 +2,14 @@ import type { ReactNode } from "react";
 import type { AppView } from "../../types";
 import { useTranslation } from "../../i18n/LanguageContext";
 
-const navigation: Array<{ id: AppView; labelKey: "shell.overview" | "shell.cardLibrary" | "shell.deckBuilder" | "shell.savedDecks" | "shell.metaWatch" | "shell.tips"; index: string }> = [
+const navigation: Array<{ id: AppView; labelKey: "shell.overview" | "shell.cardLibrary" | "shell.deckBuilder" | "shell.savedDecks" | "shell.metaWatch" | "shell.tips" | "shell.tox"; index: string }> = [
   { id: "overview", labelKey: "shell.overview", index: "01" },
   { id: "cards", labelKey: "shell.cardLibrary", index: "02" },
-  { id: "builder", labelKey: "shell.deckBuilder", index: "03" },
-  { id: "saved", labelKey: "shell.savedDecks", index: "04" },
-  { id: "meta", labelKey: "shell.metaWatch", index: "05" },
-  { id: "tips", labelKey: "shell.tips", index: "06" },
+  { id: "tox", labelKey: "shell.tox", index: "03" },
+  { id: "builder", labelKey: "shell.deckBuilder", index: "04" },
+  { id: "saved", labelKey: "shell.savedDecks", index: "05" },
+  { id: "meta", labelKey: "shell.metaWatch", index: "06" },
+  { id: "tips", labelKey: "shell.tips", index: "07" },
 ];
 
 const OFFICIAL_SPAMDEX = "https://spamgame.com/spamdex";

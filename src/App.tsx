@@ -8,12 +8,13 @@ import { DeckBuilder } from "./features/deck-builder/DeckBuilder";
 import { SavedDecks } from "./features/deck-builder/SavedDecks";
 import { MetaWatch } from "./features/meta/MetaWatch";
 import { StrategyTips } from "./features/meta/StrategyTips";
+import { ToxList } from "./features/tox/ToxList";
 import { Overview } from "./features/overview/Overview";
 import { useCardCatalogue } from "./hooks/useCardCatalogue";
 import { useCardFilters } from "./hooks/useCardFilters";
 import { useDeck } from "./hooks/useDeck";
 
-const appViews: AppView[] = ["overview", "cards", "builder", "saved", "meta", "tips"];
+const appViews: AppView[] = ["overview", "cards", "builder", "saved", "meta", "tips", "tox"];
 
 function getViewFromLocation(): AppView {
   const route = window.location.hash.slice(1).split("?")[0].replace(/^\/+/, "");
@@ -246,6 +247,9 @@ function App() {
             onSaveBuild={saveCommunityDeck}
             elementName={elementName}
           />
+        )}
+        {activeView === "tox" && (
+          <ToxList catalogue={catalogue} error={loadError} onSelectCard={setSelectedCard} />
         )}
         {activeView === "tips" && (
           <StrategyTips

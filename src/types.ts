@@ -1,4 +1,4 @@
-export type AppView = "overview" | "cards" | "builder" | "saved" | "meta" | "tips";
+export type AppView = "overview" | "cards" | "builder" | "saved" | "meta" | "tips" | "tox";
 export type CardSortOption = "number" | "name" | "hp" | "spamton";
 
 export interface CardData {
@@ -33,7 +33,9 @@ export interface CardData {
     id: string;
     name: string;
     effect: string;
+    effectRich?: string;
     rarity?: string;
+    element?: string | null;
     icon?: string;
   }>;
   talents?: Array<{
@@ -77,6 +79,18 @@ export interface CardStyleData {
   } | null;
 }
 
+export interface GameKeyword {
+  id: string;
+  title: string;
+  description: string;
+  descriptionRich?: string;
+  tooltip?: string;
+  rarity?: string;
+  decoration?: {
+    color?: string;
+  };
+}
+
 export interface CardCatalogue {
   version: string;
   language: string;
@@ -84,6 +98,7 @@ export interface CardCatalogue {
   terms: string;
   elements: GameElement[];
   rarities: GameRarity[];
+  keywords?: GameKeyword[];
   styles: CardStyleData[];
   cards: CardData[];
 }
