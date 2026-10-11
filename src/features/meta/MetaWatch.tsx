@@ -172,9 +172,10 @@ const communityBuilds: CommunityBuild[] = [
     {
       id: "15",
       slots: [
-        { options: [{ slug: "apprentie_de_la_mort", label: "Apprentie de l’amort" }] },
-        { options: [{ slug: "catimimi", label: "Catimini" }] },
+        { options: [{ slug: "apprentie_de_la_mort", label: "Apprentie de la mort" }] },
+        { options: [{ slug: "catimimi", label: "Catimimi" }] },
         { options: [{ slug: "maitresse_des_teintes", label: "Maîtresse des teintes" }] },
+        { options: [{ slug: "hibernatus", label: "Hibernatus" }] },
       ],
     },
     {
