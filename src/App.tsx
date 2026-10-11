@@ -5,16 +5,24 @@ import { AppShell } from "./components/layout/AppShell";
 import { CardLibrary } from "./features/cards/CardLibrary";
 import { DeckBuilder } from "./features/deck-builder/DeckBuilder";
 import { MetaWatch } from "./features/meta/MetaWatch";
+import { StrategyTips } from "./features/meta/StrategyTips";
 import { Overview } from "./features/overview/Overview";
 import { useCardCatalogue } from "./hooks/useCardCatalogue";
 import { useCardFilters } from "./hooks/useCardFilters";
 import { useDeck } from "./hooks/useDeck";
 
+const appViews: AppView[] = ["overview", "cards", "builder", "meta", "tips"];
+
+function getViewFromLocation(): AppView {
+  const route = window.location.hash.slice(1).split("?")[0].replace(/^\/+/, "");
+  const requestedView = appViews.find((view) => view === route);
+  if (requestedView) return requestedView;
+  return new URLSearchParams(window.location.search).has("deck") ? "builder" : "overview";
+}
+
 function App() {
   const { catalogue, error: loadError } = useCardCatalogue();
-  const [activeView, setActiveView] = useState<AppView>(() =>
-    new URLSearchParams(window.location.search).has("deck") ? "builder" : "overview",
-  );
+  const [activeView, setActiveView] = useState<AppView>(getViewFromLocation);
   const [search, setSearch] = useState("");
   const [selectedElement, setSelectedElement] = useState("all");
   const [selectedRarity, setSelectedRarity] = useState("all");
@@ -40,6 +48,28 @@ function App() {
     shareUrl,
     shareDeck,
   } = useDeck(catalogue);
+
+  useEffect(() => {
+    const syncView = () => setActiveView(getViewFromLocation());
+    window.addEventListener("hashchange", syncView);
+    window.addEventListener("popstate", syncView);
+    return () => {
+      window.removeEventListener("hashchange", syncView);
+      window.removeEventListener("popstate", syncView);
+    };
+  }, []);
+
+  function navigateToView(view: AppView) {
+    const nextHash = `#/${view}`;
+    if (window.location.hash !== nextHash) {
+      window.history.pushState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}${nextHash}`,
+      );
+    }
+    setActiveView(view);
+  }
 
   useEffect(() => {
     function focusSearch(event: KeyboardEvent) {
@@ -85,13 +115,13 @@ function App() {
 
   return (
     <div className="app-shell">
-      <AppShell activeView={activeView} deckCount={deckCount} onNavigate={setActiveView}>
+      <AppShell activeView={activeView} deckCount={deckCount} onNavigate={navigateToView}>
         {activeView === "overview" && (
           <Overview
             catalogue={catalogue}
             error={loadError}
             elementName={elementName}
-            onNavigate={setActiveView}
+            onNavigate={navigateToView}
             onSelectCard={setSelectedCard}
             onAddCard={(card) => changeDeck(card, 1)}
             deck={deck}
@@ -114,7 +144,7 @@ function App() {
             setSort={setSort}
             onSelectCard={setSelectedCard}
             onReset={resetFilters}
-            onNavigate={setActiveView}
+            onNavigate={navigateToView}
             elementName={elementName}
           />
         )}
@@ -157,12 +187,21 @@ function App() {
           <MetaWatch
             catalogue={catalogue}
             error={loadError}
-            onNavigate={setActiveView}
+            onNavigate={navigateToView}
             onSelectCard={setSelectedCard}
             onAddCards={(cards) => cards.forEach((card) => changeDeck(card, 1))}
             deckCards={deckCards}
             deckCount={deckCount}
             elementName={elementName}
+          />
+        )}
+        {activeView === "tips" && (
+          <StrategyTips
+            catalogue={catalogue}
+            error={loadError}
+            elementName={elementName}
+            onNavigate={navigateToView}
+            onSelectCard={setSelectedCard}
           />
         )}
       </AppShell>

@@ -281,7 +281,3 @@
 .collection-card:hover .game-card-face > img {
   transform: none;
 }
-
-.build-option.selected .game-card-face {
-  filter: drop-shadow(0 0 3px rgba(217, 255, 87, 0.85));
-}

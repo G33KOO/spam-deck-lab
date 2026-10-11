@@ -190,6 +190,7 @@ export function useDeck(catalogue: CardCatalogue | null) {
 
     const url = new URL(window.location.href);
     url.search = "";
+    url.hash = "#/builder";
     url.searchParams.set(
       "deck",
       deckCards

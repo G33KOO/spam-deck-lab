@@ -7,6 +7,11 @@ The interface is available in French and English (French by default). Card
 names and descriptions remain in the language supplied by the official card
 catalogue.
 
+Each menu page has a shareable hash route (`#/overview`, `#/cards`, `#/builder`,
+`#/meta`, and `#/tips`). Hash routing keeps direct links and browser refreshes
+working on GitHub Pages without a server-side fallback. Browser back and forward
+navigation also restore the selected page.
+
 ## Run locally
 
 ```sh
@@ -33,11 +38,15 @@ linked by `https://spamgame.com/data/index.json`. Card information and artwork
 are served by the official SpamDex; source and data-terms links are included in
 the app.
 
-The catalogue does not include deck lists or meta rankings. The Meta Watch page
-states this limitation rather than displaying unverified deck recommendations.
+The catalogue does not include deck lists or meta rankings. The **Deck ideas**
+page therefore presents community-suggested compositions rather than verified
+rankings. It supports card, element, and rarity filters, sorting, and a modal
+for viewing and choosing composition alternatives. The separate **Strategy
+tips** page collects the submitted gameplay advice.
+
 Decks in the builder stay in the current browser session. Build up to four
-unique cards and set optional alternatives for each slot. Use **Share Link** to
-copy a URL containing the deck name, card slugs, and alternatives; opening that
+cards and set optional alternatives for each slot. Use **Share Link** to copy
+a URL containing the deck name, card slugs, and alternatives; opening that
 link reconstructs the deck without a backend. **Copy List** exports a
 plain-text card list.
 
@@ -47,8 +56,8 @@ plain-text card list.
   card details view.
 - `src/components/layout` contains the shared application shell and navigation.
 - `src/components/ui.tsx` contains shared interface primitives.
-- `src/features` contains the overview, card library, deck builder, and Meta
-  Watch views.
+- `src/features` contains the overview, card library, deck builder, community
+  deck ideas, and strategy tips views.
 - `src/hooks` contains catalogue loading, card filtering, and deck state.
 - `src/lib` contains shared card asset and formatting helpers.
 - `src/types.ts` defines shared application and catalogue types.
