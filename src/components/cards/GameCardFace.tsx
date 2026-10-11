@@ -1,11 +1,25 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
+import { createPortal } from "react-dom";
 import type { CardData } from "../../types";
 import { imageUrl } from "../../lib/cardAssets";
 import { useTranslation } from "../../i18n/LanguageContext";
 import "./GameCardFace.css";
 
+interface TooltipMeta {
+  label: string;
+  icon?: string;
+}
+
 export function GameCardFace({ card, elementLabel }: { card: CardData; elementLabel: string }) {
-  const [hoverInfo, setHoverInfo] = useState<{ title: string; effect: string; meta?: string } | null>(null);
+  const [hoverInfo, setHoverInfo] = useState<{
+    title: string;
+    effect: string;
+    meta?: TooltipMeta[];
+    left: number;
+    top: number;
+  } | null>(null);
+  const dismissTimer = useRef<number | null>(null);
   const { language, t } = useTranslation();
   const resist = card.resistances[card.element];
   const resistance = resist === undefined ? t("card.notListed") : `${resist}%`;
@@ -17,10 +31,19 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       effect: ability.effect,
       cooldown: ability.cooldown,
       meta: [
-      ability.cooldown !== undefined ? t("card.cooldown", { count: ability.cooldown }) : "",
-      ability.precision !== undefined ? t("card.precision", { count: ability.precision }) : "",
-      ability.critChance !== undefined ? t("card.critChance", { count: ability.critChance }) : "",
-      ].filter(Boolean).join(" · "),
+        ability.cooldown !== undefined
+          ? { icon: "img/frame/cooldown.webp", label: t("card.cooldown", { count: ability.cooldown }) }
+          : undefined,
+        ability.precision !== undefined
+          ? { label: t("card.precision", { count: ability.precision }) }
+          : undefined,
+        ability.critChance !== undefined
+          ? { label: t("card.critChance", { count: ability.critChance }) }
+          : undefined,
+        ability.critMultiplier !== undefined
+          ? { label: t("card.critMultiplier", { count: ability.critMultiplier }) }
+          : undefined,
+      ].filter((item): item is TooltipMeta => item !== undefined),
     })),
     ...(card.skills ?? []).map((skill) => ({
       kind: "passive" as const,
@@ -28,12 +51,58 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       name: skill.name,
       effect: skill.effect,
       rarity: skill.rarity ?? "common",
-      meta: skill.rarity ? t("card.passiveRarity", { rarity: rarityNameForCard(skill.rarity, language) }) : t("card.passiveSkill"),
+      meta: [{
+        label: skill.rarity
+          ? t("card.passiveRarity", { rarity: rarityNameForCard(skill.rarity, language) })
+          : t("card.passiveSkill"),
+      }],
     })),
   ].slice(0, 3);
 
+  useEffect(() => () => {
+    if (dismissTimer.current !== null) window.clearTimeout(dismissTimer.current);
+  }, []);
+
+  function showHoverInfo(
+    event: ReactMouseEvent<HTMLElement>,
+    info: { title: string; effect: string; meta?: TooltipMeta[] },
+  ) {
+    if (dismissTimer.current !== null) window.clearTimeout(dismissTimer.current);
+
+    const anchor = event.currentTarget.closest(".collection-card")?.getBoundingClientRect()
+      ?? event.currentTarget.getBoundingClientRect();
+    const margin = 12;
+    const gap = 12;
+    const width = Math.min(340, window.innerWidth - margin * 2);
+    const height = Math.min(190, window.innerHeight - margin * 2);
+    let left = anchor.right + gap;
+    if (left + width > window.innerWidth - margin) {
+      left = anchor.left - width - gap;
+    }
+    if (left < margin) {
+      left = Math.min(
+        Math.max(margin, anchor.left + (anchor.width - width) / 2),
+        window.innerWidth - width - margin,
+      );
+    }
+    const top = Math.min(
+      Math.max(margin, anchor.top + (anchor.height - height) / 2),
+      window.innerHeight - height - margin,
+    );
+    setHoverInfo({ ...info, left, top });
+  }
+
+  function scheduleTooltipDismissal() {
+    if (dismissTimer.current !== null) window.clearTimeout(dismissTimer.current);
+    dismissTimer.current = window.setTimeout(() => setHoverInfo(null), 140);
+  }
+
+  function keepTooltipVisible() {
+    if (dismissTimer.current !== null) window.clearTimeout(dismissTimer.current);
+  }
+
   return (
-    <div className="game-card-face" onMouseLeave={() => setHoverInfo(null)}>
+    <div className="game-card-face">
       <div className="game-card-clip">
         <img className="game-card-artwork" src={imageUrl(card.artwork.small)} alt="" loading="lazy" />
         <img className="game-card-frame" src={imageUrl(`img/frame/body-${card.element}.webp`)} alt="" />
@@ -41,12 +110,12 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       </div>
       <span
         className="game-card-element-zone"
-        title={`${t("card.element", { name: elementLabel })}. ${t("card.resistance", { name: elementLabel, value: resistance })}.`}
-        onMouseEnter={() => setHoverInfo({
+        onMouseEnter={(event) => showHoverInfo(event, {
           title: t("card.element", { name: elementLabel }),
           effect: t("card.elementDescription"),
-          meta: t("card.resistance", { name: elementLabel, value: resistance }),
+          meta: [{ label: t("card.resistance", { name: elementLabel, value: resistance }) }],
         })}
+        onMouseLeave={scheduleTooltipDismissal}
       >
         <img className="game-card-element" src={imageUrl(`img/elements/${card.element}.webp`)} alt="" />
       </span>
@@ -56,12 +125,12 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
           className={`game-card-row game-card-row-${row.kind}`}
           key={`${row.kind}-${row.id}-${index}`}
           style={{ top: `${((759 + index * 148) / 1375) * 100}%` }}
-          title={`${row.name}: ${row.effect}`}
-          onMouseEnter={() => setHoverInfo({
+          onMouseEnter={(event) => showHoverInfo(event, {
             title: `${t(row.kind === "attack" ? "card.attack" : "card.passive")} · ${row.name}`,
             effect: row.effect,
             meta: row.meta,
           })}
+          onMouseLeave={scheduleTooltipDismissal}
         >
           {row.kind === "attack" ? (
             <>
@@ -92,12 +161,12 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       <div className="game-card-hp">{card.hp.toLocaleString()}/{card.hp.toLocaleString()}</div>
       <div
         className="game-card-spamton"
-        title={t("card.spamtonTitle", { count: card.spamton })}
-        onMouseEnter={() => setHoverInfo({
+        onMouseEnter={(event) => showHoverInfo(event, {
           title: t("card.spamton"),
           effect: t("card.spamtonHelp"),
-          meta: t("card.perTurn", { count: card.spamton }),
+          meta: [{ label: t("card.perTurn", { count: card.spamton }) }],
         })}
+        onMouseLeave={scheduleTooltipDismissal}
       >
         <img src={imageUrl("img/frame/spamton.webp")} alt="" />
         <strong>{card.spamton}</strong>
@@ -108,11 +177,29 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
         alt=""
       />
       {hoverInfo && (
-        <div className="game-card-interaction-tooltip" aria-live="polite">
-          <strong>{hoverInfo.title}</strong>
-          <span>{hoverInfo.effect}</span>
-          {hoverInfo.meta && <small>{hoverInfo.meta}</small>}
-        </div>
+        createPortal(
+          <div
+            className="game-card-interaction-tooltip"
+            role="tooltip"
+            style={{ left: hoverInfo.left, top: hoverInfo.top }}
+            onMouseEnter={keepTooltipVisible}
+            onMouseLeave={scheduleTooltipDismissal}
+          >
+            <strong>{hoverInfo.title}</strong>
+            <span>{hoverInfo.effect}</span>
+            {hoverInfo.meta && hoverInfo.meta.length > 0 && (
+              <div className="game-card-interaction-tooltip-meta">
+                {hoverInfo.meta.map((item, index) => (
+                  <small key={`${item.label}-${index}`}>
+                    {item.icon && <img src={imageUrl(item.icon)} alt="" />}
+                    {item.label}
+                  </small>
+                ))}
+              </div>
+            )}
+          </div>,
+          document.body,
+        )
       )}
     </div>
   );

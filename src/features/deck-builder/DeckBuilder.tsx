@@ -25,6 +25,7 @@ export function DeckBuilder({
   onChangeDeck,
   onAddAlternative,
   onSelectAlternative,
+  onSelectTalent,
   onRemoveAlternative,
   onSelectCard,
   copied,
@@ -34,6 +35,9 @@ export function DeckBuilder({
   shareUrl,
   deckName,
   setDeckName,
+  saveError,
+  deckSaved,
+  onSave,
   onCopy,
   onShare,
   elementName,
@@ -57,6 +61,7 @@ export function DeckBuilder({
   onChangeDeck: (card: CardData, amount: number) => void;
   onAddAlternative: (slotId: string, card: CardData) => void;
   onSelectAlternative: (slotId: string, cardId: string) => void;
+  onSelectTalent: (slotId: string, talentSlot: number | null) => void;
   onRemoveAlternative: (slotId: string, cardId: string) => void;
   onSelectCard: (card: CardData) => void;
   copied: boolean;
@@ -66,6 +71,9 @@ export function DeckBuilder({
   shareUrl: string;
   deckName: string;
   setDeckName: (value: string) => void;
+  saveError: string;
+  deckSaved: boolean;
+  onSave: () => boolean;
   onCopy: () => void;
   onShare: () => void;
   elementName: (id: string) => string;
@@ -94,6 +102,8 @@ export function DeckBuilder({
       {deckNotice && <div className="notice" role="status"><strong>{t("builder.sharedAdjusted")}</strong> {deckNotice}</div>}
       {copyError && <div className="notice error-notice" role="alert"><strong>{t("builder.copyErrorTitle")}</strong> {copyError}</div>}
       {shareError && <div className="notice error-notice" role="alert"><strong>{t("builder.shareErrorTitle")}</strong> {shareError}</div>}
+      {saveError && <div className="notice error-notice" role="alert">{saveError}</div>}
+      {deckSaved && <div className="notice" role="status">{t("builder.deckSaved")}</div>}
       {!catalogue && !error ? <LoadingState /> : catalogue && (
         <>
           <div className="builder-layout">
@@ -194,9 +204,9 @@ export function DeckBuilder({
                     aria-label={t("builder.deckNameLabel")}
                     maxLength={60}
                   />
-                  <p className="deck-subtitle">{t("builder.subtitle")}</p>
                 </div>
                 <div className="deck-header-actions">
+                  <button className="deck-menu" onClick={onSave} title={t("builder.saveDeck")}>{t("builder.saveDeck")}</button>
                   <button className="deck-menu" onClick={onShare} title={t("builder.shareLink")}>{shareCopied ? `${t("builder.linkCopied")} ✓` : `${t("builder.shareLink")} ↗`}</button>
                   <button className="deck-menu" onClick={onCopy} title={t("builder.copyList")}>{copied ? `${t("builder.listCopied")} ✓` : `${t("builder.copyList")} ↗`}</button>
                 </div>
@@ -207,7 +217,7 @@ export function DeckBuilder({
               </div>
               {deckCards.length ? (
                 <div className="deck-card-grid">
-                  {deckCards.map(({ id, card, alternatives }) => (
+                  {deckCards.map(({ id, card, alternatives, selectedTalentSlot, selectedTalent }) => (
                     <div className="deck-slot" key={id}>
                       <CardTile
                         card={card}
@@ -217,6 +227,29 @@ export function DeckBuilder({
                         quantity={1}
                         deckMode
                       />
+                      {card.talents?.length ? (
+                        <label className="deck-talent-picker">
+                          <span>{t("builder.talent")}</span>
+                          <select
+                            value={selectedTalentSlot ?? ""}
+                            onChange={(event) => onSelectTalent(id, event.target.value ? Number(event.target.value) : null)}
+                            aria-label={t("builder.selectTalent", { name: card.name })}
+                          >
+                            <option value="">{t("builder.noTalent")}</option>
+                            {card.talents.map((talent, index) => (
+                              <option key={`${talent.slot ?? index}-${talent.id}`} value={talent.slot ?? index + 1}>
+                                {talent.name}
+                              </option>
+                            ))}
+                          </select>
+                          {selectedTalent?.effect && <small>{selectedTalent.effect}</small>}
+                        </label>
+                      ) : (
+                        <div className="deck-talent-picker unavailable">
+                          <span>{t("builder.talent")}</span>
+                          <small>{t("builder.noTalentDefined")}</small>
+                        </div>
+                      )}
                       {alternatives.length > 0 && (
                         <div className="deck-slot-alternatives">
                           <span>{t("builder.options", { count: alternatives.length + 1 })}</span>
@@ -267,7 +300,7 @@ export function DeckBuilder({
                 </div>
               )}
               <div className="deck-panel-bottom">
-                <span><i className="tiny-live" /> {t("builder.sessionOnly")}</span>
+                <span><i className="tiny-live" /> {t("builder.localSaved")}</span>
                 <button onClick={onShare}>{shareCopied ? t("builder.linkCopied") : t("builder.shareDeck")} <span>↗</span></button>
               </div>
               {shareUrl && (

@@ -246,36 +246,57 @@
 }
 
 .game-card-interaction-tooltip {
-  position: absolute;
-  z-index: 8;
-  right: 4%;
-  bottom: 14.5%;
-  left: 4%;
+  position: fixed;
+  z-index: 10000;
   display: flex;
-  max-height: 30%;
+  width: min(340px, calc(100vw - 24px));
+  height: min(190px, calc(100vh - 24px));
   flex-direction: column;
-  gap: 0.7cqw;
-  overflow: auto;
-  padding: 2.4cqw 3cqw;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 2cqw;
-  background: rgba(7, 6, 12, 0.94);
-  box-shadow: 0 0.7cqw 2cqw rgba(0, 0, 0, 0.65);
+  gap: 9px;
+  overflow-y: auto;
+  padding: 15px 17px;
+  border: 1px solid rgba(217, 255, 87, 0.5);
+  border-radius: 8px;
+  background: rgba(17, 19, 17, 0.98);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75);
   color: #fff;
-  font-size: 3cqw;
-  line-height: 1.3;
-  pointer-events: none;
+  font-size: 14px;
+  line-height: 1.5;
+  scrollbar-color: #41463e transparent;
+  scrollbar-width: thin;
 }
 
 .game-card-interaction-tooltip strong {
   color: #d9ff83;
-  font: 3.25cqw "Lilita One", system-ui, sans-serif;
+  font: 16px "Lilita One", system-ui, sans-serif;
   text-transform: uppercase;
 }
 
 .game-card-interaction-tooltip small {
   color: #c8cebf;
-  font-size: 2.7cqw;
+  font-size: 12px;
+}
+
+.game-card-interaction-tooltip-meta {
+  display: grid;
+  gap: 5px;
+  margin-top: auto;
+}
+
+.game-card-interaction-tooltip-meta small {
+  display: flex;
+  min-height: 18px;
+  align-items: center;
+  gap: 7px;
+  color: #d7decf;
+  line-height: 1.35;
+}
+
+.game-card-interaction-tooltip-meta img {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .collection-card:hover .game-card-face > img {

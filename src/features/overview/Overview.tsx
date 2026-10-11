@@ -90,6 +90,7 @@ export function Overview({
               onSelect={() => onSelectCard(card)}
               onAdd={() => onAddCard(card)}
               quantity={deck[card.id] ?? 0}
+              showQuantityCount={false}
               addDisabled={Boolean(deck[card.id]) || deckCount >= 4}
             />
           )) : Array.from({ length: 4 }, (_, index) => <div key={index} className="skeleton-card" />)}

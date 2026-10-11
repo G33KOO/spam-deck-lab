@@ -4,6 +4,7 @@ import { CardDetails } from "./components/cards/CardDetails";
 import { AppShell } from "./components/layout/AppShell";
 import { CardLibrary } from "./features/cards/CardLibrary";
 import { DeckBuilder } from "./features/deck-builder/DeckBuilder";
+import { SavedDecks } from "./features/deck-builder/SavedDecks";
 import { MetaWatch } from "./features/meta/MetaWatch";
 import { StrategyTips } from "./features/meta/StrategyTips";
 import { Overview } from "./features/overview/Overview";
@@ -11,7 +12,7 @@ import { useCardCatalogue } from "./hooks/useCardCatalogue";
 import { useCardFilters } from "./hooks/useCardFilters";
 import { useDeck } from "./hooks/useDeck";
 
-const appViews: AppView[] = ["overview", "cards", "builder", "meta", "tips"];
+const appViews: AppView[] = ["overview", "cards", "builder", "saved", "meta", "tips"];
 
 function getViewFromLocation(): AppView {
   const route = window.location.hash.slice(1).split("?")[0].replace(/^\/+/, "");
@@ -34,11 +35,22 @@ function App() {
     deck,
     deckName,
     setDeckName,
+    savedDecks,
+    savedDecksLoaded,
+    storageError,
+    saveError,
+    deckSaved,
+    saveCurrentDeck,
+    loadSavedDeck,
+    deleteSavedDeck,
+    startNewDeck,
     deckCards,
     deckCount,
     changeDeck,
     addAlternative,
     selectAlternative,
+    selectTalent,
+    addDeckCards,
     removeAlternative,
     deckNotice,
     copied,
@@ -188,6 +200,7 @@ function App() {
             onChangeDeck={changeDeck}
             onAddAlternative={addAlternative}
             onSelectAlternative={selectAlternative}
+            onSelectTalent={selectTalent}
             onRemoveAlternative={removeAlternative}
             onSelectCard={setSelectedCard}
             copied={copied}
@@ -197,9 +210,29 @@ function App() {
             shareUrl={shareUrl}
             deckName={deckName}
             setDeckName={setDeckName}
+            saveError={saveError}
+            deckSaved={deckSaved}
+            onSave={saveCurrentDeck}
             onCopy={copyDeck}
             onShare={shareDeck}
             elementName={elementName}
+          />
+        )}
+        {activeView === "saved" && (
+          <SavedDecks
+            catalogue={catalogue}
+            error={loadError}
+            savedDecks={savedDecks}
+            loaded={savedDecksLoaded}
+            storageError={storageError}
+            onLoad={(id) => {
+              if (loadSavedDeck(id)) navigateToView("builder");
+            }}
+            onDelete={deleteSavedDeck}
+            onNewDeck={() => {
+              startNewDeck();
+              navigateToView("builder");
+            }}
           />
         )}
         {activeView === "meta" && (
@@ -208,7 +241,7 @@ function App() {
             error={loadError}
             onNavigate={navigateToView}
             onSelectCard={setSelectedCard}
-            onAddCards={(cards) => cards.forEach((card) => changeDeck(card, 1))}
+            onAddCards={addDeckCards}
             deckCards={deckCards}
             deckCount={deckCount}
             elementName={elementName}

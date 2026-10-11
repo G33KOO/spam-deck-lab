@@ -13,6 +13,7 @@ export interface BuildCardOption {
 
 export interface BuildSlot {
     options: BuildCardOption[];
+    talentSlot?: number;
     noteKey?: "meta.talentOneCavalry" | "meta.cavalryTalent" | "meta.talentOneMandatory";
 }
 
@@ -92,9 +93,9 @@ const communityBuilds: CommunityBuild[] = [
     {
       id: "07",
       slots: [
-        { options: [{ slug: "ephial", label: "Ephial" }], noteKey: "meta.talentOneCavalry" },
-        { options: [{ slug: "esprit_ombre", label: "Starter ombre" }], noteKey: "meta.cavalryTalent" },
-        { options: [{ slug: "esprit_lumiere", label: "Starter lumière" }], noteKey: "meta.cavalryTalent" },
+        { options: [{ slug: "ephial", label: "Ephial" }], talentSlot: 1 },
+        { options: [{ slug: "esprit_ombre", label: "Starter ombre" }], talentSlot: 3 },
+        { options: [{ slug: "esprit_lumiere", label: "Starter lumière" }], talentSlot: 3 },
         { options: [{ slug: "cornu_mythologique", label: "Cornu mythologique" }] },
       ],
     },
@@ -103,7 +104,7 @@ const communityBuilds: CommunityBuild[] = [
       noteKey: "meta.build.08.note",
       slots: [
         { options: [{ slug: "cornu_mythologique", label: "Cornu mythologique" }] },
-        { options: [{ slug: "dragon_de_la_cite_infernale", label: "Dragosaure" }], noteKey: "meta.talentOneMandatory" },
+        { options: [{ slug: "dragon_de_la_cite_infernale", label: "Dragosaure" }], talentSlot: 1, noteKey: "meta.talentOneMandatory" },
         { options: [{ slug: "dragon_ciel", label: "Dragon Ciel" }] },
         { options: [{ slug: "lepine_damour", label: "Épine d’Amour" }] },
       ],
@@ -184,7 +185,7 @@ export function MetaWatch({
   elementName: (id: string) => string;
   onNavigate: (view: AppView) => void;
   onSelectCard: (card: CardData) => void;
-  onAddCards: (cards: CardData[]) => void;
+  onAddCards: (cards: Array<{ card: CardData; talentSlot?: number }>) => void;
   deckCards: DeckCardSlot[];
   deckCount: number;
 }) {
@@ -238,11 +239,11 @@ export function MetaWatch({
       ...slot.alternatives.map((card) => card.id),
     ]));
     const seenIds = new Set<string>();
-    return build.slots.flatMap((_, slotIndex) => {
+    return build.slots.flatMap((slot, slotIndex) => {
       const card = selectedCard(build, slotIndex);
       if (!card || usedIds.has(card.id) || seenIds.has(card.id)) return [];
       seenIds.add(card.id);
-      return [card];
+      return [{ card, talentSlot: slot.talentSlot }];
     }).slice(0, Math.max(0, 4 - deckCount));
   }
 
@@ -449,10 +450,26 @@ export function MetaWatch({
                     {build.slots.map((slot, slotIndex) => {
                       const selectedIndex = selectedOptions[`${build.id}-${slotIndex}`] ?? 0;
                       const card = selectedCard(build, slotIndex);
+                      const selectedTalent = slot.talentSlot === undefined
+                        ? undefined
+                        : card?.talents?.find((talent, index) =>
+                          (talent.slot ?? index + 1) === slot.talentSlot,
+                        );
                       return (
                         <div className="build-slot" key={`${build.id}-${slotIndex}`}>
                           <div className="build-slot-heading">
                             <span>{t("meta.slot", { number: String(slotIndex + 1).padStart(2, "0") })}</span>
+                            {slot.options.length > 1 && (
+                              <button
+                                className="show-alternatives-button"
+                                type="button"
+                                aria-label={t("meta.showAlternatives")}
+                                title={t("meta.showAlternatives")}
+                                onClick={() => setActiveAlternatives({ buildId: build.id, slotIndex })}
+                              >
+                                <span aria-hidden="true">↔</span>
+                              </button>
+                            )}
                           </div>
                           <div className={`build-slot-card-choice ${card ? "" : "unmatched"}`}>
                             {card ? (
@@ -470,22 +487,37 @@ export function MetaWatch({
                               </div>
                             )}
                           </div>
-                          {slot.options.length > 1 && (
-                            <button
-                              className="show-alternatives-button"
-                              type="button"
-                              aria-label={t("meta.showAlternatives")}
-                              onClick={() => setActiveAlternatives({ buildId: build.id, slotIndex })}
-                            >
-                              {t("meta.showAlternatives")}
-                            </button>
-                          )}
-                          {slot.noteKey && <p className="build-slot-note">{t(slot.noteKey)}</p>}
+                          <div className={`build-slot-talent ${selectedTalent ? "" : "unavailable"}`}>
+                            <span>
+                              {t("meta.talent")}{slot.talentSlot !== undefined ? ` · ${slot.talentSlot}` : ""}
+                            </span>
+                            {selectedTalent ? (
+                              <>
+                                <strong>{selectedTalent.name}</strong>
+                                {selectedTalent.effect && <small>{selectedTalent.effect}</small>}
+                              </>
+                            ) : (
+                              <small>{t("builder.noTalentDefined")}</small>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
-                  {build.noteKey && <p className="community-build-note">✳ {t(build.noteKey)}</p>}
+                  {(build.noteKey || build.slots.some((slot) => slot.noteKey)) && (
+                    <div className="community-build-notes">
+                      {build.noteKey && <p className="community-build-note">✳ {t(build.noteKey)}</p>}
+                      {build.slots.flatMap((slot, slotIndex) =>
+                        slot.noteKey
+                          ? [(
+                            <p className="community-build-note" key={`${build.id}-note-${slotIndex}`}>
+                              ✳ {t("meta.slot", { number: String(slotIndex + 1).padStart(2, "0") })} · {t(slot.noteKey)}
+                            </p>
+                          )]
+                          : [],
+                      )}
+                    </div>
+                  )}
                   <button
                     className="primary-button build-add-button"
                     disabled={!addableCount}

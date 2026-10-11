@@ -13,6 +13,7 @@ export function CardTile({
   addLabel,
   addDisabled = false,
   hideAdd = false,
+  showQuantityCount = true,
 }: {
   card: CardData;
   elementLabel: string;
@@ -24,6 +25,7 @@ export function CardTile({
   addLabel?: string;
   addDisabled?: boolean;
   hideAdd?: boolean;
+  showQuantityCount?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -46,7 +48,9 @@ export function CardTile({
             aria-label={t("card.addLabel", { name: card.name })}
             disabled={addDisabled}
           >
-            {addLabel ? <>{addLabel}{quantity ? ` · ${quantity}` : ""}</> : quantity ? `+ ${quantity}` : "+"}
+            {addLabel
+              ? <>{addLabel}{showQuantityCount && quantity ? ` · ${quantity}` : ""}</>
+              : showQuantityCount && quantity ? `+ ${quantity}` : "+"}
           </button>
         )}
       </div>}
