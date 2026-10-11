@@ -1,6 +1,7 @@
 import type { CardCatalogue, CardData, AppView, CardSortOption } from "../../types";
 import { CardTile } from "../../components/cards/CardTile";
 import { DataNotice, LoadingState, PageHeader, SearchIcon } from "../../components/ui";
+import { useTranslation } from "../../i18n/LanguageContext";
 
 export function CardLibrary({
   catalogue,
@@ -16,8 +17,6 @@ export function CardLibrary({
   sort,
   setSort,
   onSelectCard,
-  onAddCard,
-  deck,
   onReset,
   onNavigate,
   elementName,
@@ -35,19 +34,20 @@ export function CardLibrary({
   sort: CardSortOption;
   setSort: (value: CardSortOption) => void;
   onSelectCard: (card: CardData) => void;
-  onAddCard: (card: CardData) => void;
-  deck: Record<string, number>;
   onReset: () => void;
   onNavigate: (view: AppView) => void;
   elementName: (id: string) => string;
 }) {
+  const { t } = useTranslation();
+  const hasFilters = Boolean(search || selectedElement !== "all" || selectedRarity !== "all" || sort !== "number");
+
   return (
     <>
       <PageHeader
-        eyebrow="THE SPAMDEX"
-        title="Card library"
-        description="Search the complete collection. Inspect stats, abilities, talents, and resistances."
-        action={{ label: "BUILD A DECK", onClick: () => onNavigate("builder") }}
+        eyebrow={t("library.eyebrow")}
+        title={t("library.title")}
+        description={t("library.description")}
+        action={{ label: t("library.buildDeck"), onClick: () => onNavigate("builder") }}
       />
       <DataNotice error={error} />
       {!catalogue && !error ? <LoadingState /> : catalogue && (
@@ -59,41 +59,41 @@ export function CardLibrary({
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 ref={searchInputRef}
-                placeholder="Search cards, abilities..."
-                aria-label="Search cards and abilities"
+                placeholder={t("library.searchPlaceholder")}
+                aria-label={t("library.searchLabel")}
               />
               <kbd>/</kbd>
             </label>
             <label className="select-field">
-              <span>ELEMENT</span>
+              <span>{t("filter.element")}</span>
               <select value={selectedElement} onChange={(event) => setSelectedElement(event.target.value)}>
-                <option value="all">All elements</option>
+                <option value="all">{t("filter.allElements")}</option>
                 {catalogue.elements.map((element) => <option key={element.id} value={element.id}>{element.name}</option>)}
               </select>
             </label>
             <label className="select-field">
-              <span>RARITY</span>
+              <span>{t("filter.rarity")}</span>
               <select value={selectedRarity} onChange={(event) => setSelectedRarity(event.target.value)}>
-                <option value="all">All rarities</option>
+                <option value="all">{t("filter.allRarities")}</option>
                 {catalogue.rarities.map((rarity) => <option key={rarity.id} value={rarity.id}>{rarity.name}</option>)}
               </select>
             </label>
             <label className="select-field sort-field">
-              <span>SORT BY</span>
+              <span>{t("filter.sort")}</span>
               <select value={sort} onChange={(event) => setSort(event.target.value as CardSortOption)}>
-                <option value="number">Card number</option>
-                <option value="name">Name</option>
-                <option value="hp">Highest HP</option>
-                <option value="spamton">Lowest Spamton</option>
+                <option value="number">{t("filter.cardNumber")}</option>
+                <option value="name">{t("filter.name")}</option>
+                <option value="hp">{t("filter.highestHp")}</option>
+                <option value="spamton">{t("filter.lowestSpamton")}</option>
               </select>
             </label>
           </div>
           <div className="results-line">
-            <span><strong>{cards.length}</strong> OF {catalogue.cards.length} CARDS</span>
-            {(search || selectedElement !== "all" || selectedRarity !== "all") && (
-              <button onClick={onReset}>CLEAR FILTERS <span>×</span></button>
+            <span><strong>{cards.length}</strong> {t("filter.resultsOf", { total: catalogue.cards.length })}</span>
+            {hasFilters && (
+              <button onClick={onReset}>{t("filter.clear")} <span>×</span></button>
             )}
-            <span className="catalogue-version">DATASET {catalogue.version} <i className="tiny-live" /></span>
+            <span className="catalogue-version">{t("filter.dataset", { version: catalogue.version })} <i className="tiny-live" /></span>
           </div>
           {cards.length ? (
             <div className="card-grid">
@@ -103,12 +103,11 @@ export function CardLibrary({
                   card={card}
                   elementLabel={elementName(card.element)}
                   onSelect={() => onSelectCard(card)}
-                  onAdd={() => onAddCard(card)}
-                  quantity={deck[card.id] ?? 0}
+                  hideAdd
                 />
               ))}
             </div>
-          ) : <div className="empty-state"><span>⌕</span><h3>No cards found</h3><p>Try a different name or clear your filters.</p></div>}
+          ) : <div className="empty-state"><span>⌕</span><h3>{t("filter.noCards")}</h3><p>{t("filter.tryDifferent")}</p></div>}
         </>
       )}
     </>

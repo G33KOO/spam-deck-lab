@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "../i18n/LanguageContext";
 
 export function PageHeader({
   eyebrow,
@@ -24,10 +25,25 @@ export function PageHeader({
 }
 
 export function DataNotice({ error }: { error: string }) {
+  const { t } = useTranslation();
   if (error) {
+    const requestFailure = error.match(/^(Catalogue index|Card data) request failed \((\d+)\)\.$/);
+    let summary = t("ui.loadFailed");
+    if (requestFailure) {
+      summary = t("ui.requestFailed", {
+        resource: t(requestFailure[1] === "Catalogue index" ? "ui.catalogueIndex" : "ui.cardData"),
+        status: requestFailure[2],
+      });
+    } else if (error === "The card data source returned an incomplete catalogue.") {
+      summary = t("ui.invalidCatalogue");
+    }
     return (
       <div className="notice error-notice" role="alert">
-        <strong>Card data is unavailable.</strong> {error} Check your connection or refresh to try again.
+        <strong>{t("ui.dataUnavailable")}</strong> {summary} {t("ui.retryData")}
+        <details>
+          <summary>{t("ui.technicalDetails")}</summary>
+          <code>{error}</code>
+        </details>
       </div>
     );
   }
@@ -53,11 +69,12 @@ export function DetailGroup({ title, count, children }: { title: string; count: 
 }
 
 export function LoadingState() {
+  const { t } = useTranslation();
   return (
     <div className="loading-state" role="status">
       <span className="loading-spinner" />
-      <strong>Syncing the SpamDex</strong>
-      <p>Fetching the latest official card data...</p>
+      <strong>{t("ui.loadingTitle")}</strong>
+      <p>{t("ui.loadingText")}</p>
     </div>
   );
 }

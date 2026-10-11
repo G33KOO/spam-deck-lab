@@ -3,6 +3,8 @@ import type { CardCatalogue, CardData, AppView } from "../../types";
 import { GameCardFace } from "../../components/cards/GameCardFace";
 import { DataNotice, LoadingState, PageHeader } from "../../components/ui";
 import { imageUrl } from "../../lib/cardAssets";
+import { useTranslation } from "../../i18n/LanguageContext";
+import type { DeckCardSlot } from "../../hooks/useDeck";
 
 export interface BuildCardOption {
   slug?: string;
@@ -16,17 +18,12 @@ export interface BuildSlot {
 
 export interface CommunityBuild {
   id: string;
-  title: string;
-  description: string;
   slots: BuildSlot[];
-  notes?: string[];
 }
 
 const communityBuilds: CommunityBuild[] = [
   {
     id: "01",
-    title: "Divine song",
-    description: "Four-card lineup idea · choose a flex for the last slot.",
     slots: [
       { options: [{ slug: "melodie_des_divinites", label: "Mélodie" }] },
       { options: [{ slug: "rob_laventurier", label: "Rob" }] },
@@ -41,19 +38,15 @@ const communityBuilds: CommunityBuild[] = [
   },
   {
     id: "02",
-    title: "Blaze lineup",
-    description: "A funny Aigan pick—still needs the right talent.",
     slots: [
       { options: [{ slug: "blaze", label: "Blaze" }] },
       { options: [{ slug: "zayd", label: "Zayd" }] },
       { options: [{ slug: "astry", label: "Astry" }] },
-      { options: [{ label: "Aigan (not found in the current catalogue)" }] },
+      { options: [{ label: "Aigan" }] },
     ],
   },
   {
     id: "03",
-    title: "Full DPS",
-    description: "Damage-focused lineup with a flexible third slot.",
     slots: [
       { options: [{ slug: "princesse_meridia", label: "Meridia" }] },
       { options: [{ slug: "zombie_floral", label: "Zombie" }] },
@@ -61,7 +54,7 @@ const communityBuilds: CommunityBuild[] = [
         options: [
           { slug: "murmures_du_corail_noir", label: "Murmures" },
           { slug: "fleurmarine", label: "Marine (Fleurmarine)" },
-          { label: "Tismo (not found in the current catalogue)" },
+          { label: "Tismo" },
         ],
       },
       { options: [{ slug: "girafe_florale", label: "Girafe" }] },
@@ -70,28 +63,21 @@ const communityBuilds: CommunityBuild[] = [
         optional: true,
       },
     ],
-    notes: ["Lame de la forêt is an optional extra to try."],
   },
   {
     id: "04",
-    title: "Darkness lineup",
-    description: "A dark-element idea; two references need to be identified.",
     slots: [
       { options: [{ slug: "vladislaus", label: "Vlad" }] },
       { options: [{ slug: "paguroniyx", label: "Pagu" }] },
-      { options: [{ label: "Starter ténèbre (not found in the current catalogue)" }] },
-      { options: [{ label: "Codex ténèbre (not found in the current catalogue)" }] },
+      { options: [{ label: "Starter ténèbre" }] },
+      { options: [{ label: "Codex ténèbre" }] },
     ],
   },
 ];
 
 const communityTips = [
   {
-    title: "Prioriser les dégâts bruts",
-    category: "BUILD · DÉGÂTS",
-    text: "Sur les monstres comme Mélodie, qui ont peu de dégâts de base, le bonus élémentaire apporte peu. Mieux vaut d’abord augmenter les dégâts de base, puis les chances et multiplicateurs de critique.",
     relatedSlug: "melodie_des_divinites",
-    relatedLabel: "Voir Mélodie",
   },
 ];
 
@@ -102,6 +88,8 @@ export function MetaWatch({
   onNavigate,
   onSelectCard,
   onAddCards,
+  deckCards,
+  deckCount,
 }: {
   catalogue: CardCatalogue | null;
   error: string;
@@ -109,9 +97,18 @@ export function MetaWatch({
   onNavigate: (view: AppView) => void;
   onSelectCard: (card: CardData) => void;
   onAddCards: (cards: CardData[]) => void;
+  deckCards: DeckCardSlot[];
+  deckCount: number;
 }) {
+  const { t } = useTranslation();
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
   const [includedOptional, setIncludedOptional] = useState<Record<string, boolean>>({});
+  const buildCopy = {
+    "01": { title: t("meta.build.01.title"), description: t("meta.build.01.description") },
+    "02": { title: t("meta.build.02.title"), description: t("meta.build.02.description") },
+    "03": { title: t("meta.build.03.title"), description: t("meta.build.03.description") },
+    "04": { title: t("meta.build.04.title"), description: t("meta.build.04.description") },
+  };
 
   function selectedCard(build: CommunityBuild, slotIndex: number): CardData | undefined {
     const slot = build.slots[slotIndex];
@@ -122,13 +119,24 @@ export function MetaWatch({
       : undefined;
   }
 
-  function addBuild(build: CommunityBuild) {
-    if (!catalogue) return;
-    const cards = build.slots.flatMap((slot, slotIndex) => {
+  function addableCards(build: CommunityBuild) {
+    const usedIds = new Set(deckCards.flatMap((slot) => [
+      slot.card.id,
+      ...slot.alternatives.map((card) => card.id),
+    ]));
+    const seenIds = new Set<string>();
+    return build.slots.flatMap((slot, slotIndex) => {
       if (slot.optional && !includedOptional[`${build.id}-${slotIndex}`]) return [];
       const card = selectedCard(build, slotIndex);
-      return card ? [card] : [];
-    });
+      if (!card || usedIds.has(card.id) || seenIds.has(card.id)) return [];
+      seenIds.add(card.id);
+      return [card];
+    }).slice(0, Math.max(0, 4 - deckCount));
+  }
+
+  function addBuild(build: CommunityBuild) {
+    if (!catalogue) return;
+    const cards = addableCards(build);
     if (cards.length) {
       onAddCards(cards);
       onNavigate("builder");
@@ -138,31 +146,28 @@ export function MetaWatch({
   return (
     <>
       <PageHeader
-        eyebrow="COMMUNITY IDEAS"
-        title="Build watch"
-        description="Early lineups shared by players. Browse the suggested cards, try a variation, or load the available cards into your builder."
+        eyebrow={t("meta.eyebrow")}
+        title={t("meta.title")}
+        description={t("meta.description")}
       />
       <DataNotice error={error} />
       <div className="build-disclaimer">
-        <span>COMMUNITY SUBMISSIONS · NOT RANKED</span>
-        <p>These are starting ideas, not verified meta decks. Missing names stay marked until they can be matched to the official card catalogue.</p>
+        <span>{t("meta.disclaimerTitle")}</span>
+        <p>{t("meta.disclaimerText")}</p>
       </div>
       {!catalogue && !error ? <LoadingState /> : catalogue && (
         <div className="community-content">
           <div className="community-build-grid">
             {communityBuilds.map((build) => {
-              const addableCount = build.slots.reduce((count, slot, slotIndex) => {
-                if (slot.optional && !includedOptional[`${build.id}-${slotIndex}`]) return count;
-                return count + (selectedCard(build, slotIndex) ? 1 : 0);
-              }, 0);
+              const addableCount = addableCards(build).length;
               return (
                 <article className="community-build" key={build.id}>
                   <div className="community-build-header">
-                    <span className="build-number">BUILD / {build.id}</span>
-                    <span className="community-tag">COMMUNITY IDEA</span>
+                    <span className="build-number">{t("meta.buildLabel", { number: build.id })}</span>
+                    <span className="community-tag">{t("meta.communityIdea")}</span>
                   </div>
-                  <h2>{build.title}</h2>
-                  <p className="community-build-description">{build.description}</p>
+                    <h2>{buildCopy[build.id as keyof typeof buildCopy].title}</h2>
+                    <p className="community-build-description">{buildCopy[build.id as keyof typeof buildCopy].description}</p>
                   <div className="build-slots">
                     {build.slots.map((slot, slotIndex) => {
                       const selectedIndex = selectedOptions[`${build.id}-${slotIndex}`] ?? 0;
@@ -170,7 +175,7 @@ export function MetaWatch({
                       return (
                         <div className={`build-slot ${slot.optional ? "optional-slot" : ""}`} key={`${build.id}-${slotIndex}`}>
                           <div className="build-slot-heading">
-                            <span>{slot.optional ? "OPTIONAL ADD" : `SLOT ${String(slotIndex + 1).padStart(2, "0")}`}</span>
+                            <span>{slot.optional ? t("meta.optionalAdd") : t("meta.slot", { number: String(slotIndex + 1).padStart(2, "0") })}</span>
                             {slot.optional && (
                               <label className="optional-toggle">
                                 <input
@@ -181,7 +186,7 @@ export function MetaWatch({
                                     [`${build.id}-${slotIndex}`]: event.target.checked,
                                   }))}
                                 />
-                                <span>INCLUDE</span>
+                                <span>{t("meta.include")}</span>
                               </label>
                             )}
                           </div>
@@ -198,7 +203,7 @@ export function MetaWatch({
                                     ...current,
                                     [`${build.id}-${slotIndex}`]: optionIndex,
                                   }))}
-                                  title={optionCard ? `Select ${optionCard.name}` : option.label}
+                                  title={optionCard ? t("meta.selectCard", { name: optionCard.name }) : option.label}
                                 >
                                   <span className="build-option-art">
                                     {optionCard ? (
@@ -210,8 +215,8 @@ export function MetaWatch({
                                   </span>
                                   {!optionCard && (
                                     <span className="build-option-name">
-                                      <strong>{option.label}</strong>
-                                      <small>NEEDS CARD MATCH</small>
+                                      <strong>{t("meta.missingCard", { name: option.label })}</strong>
+                                      <small>{t("meta.needsMatch")}</small>
                                     </span>
                                   )}
                                 </button>
@@ -220,20 +225,20 @@ export function MetaWatch({
                           </div>
                           {card && (
                             <button className="build-card-details" onClick={() => onSelectCard(card)}>
-                              VIEW CARD DETAILS <span>↗</span>
+                              {t("meta.viewDetails")} <span>↗</span>
                             </button>
                           )}
                         </div>
                       );
                     })}
                   </div>
-                  {build.notes?.map((note) => <p className="community-build-note" key={note}>✳ {note}</p>)}
+                  {build.id === "03" && <p className="community-build-note">✳ {t("meta.build.03.note")}</p>}
                   <button
                     className="primary-button build-add-button"
                     disabled={!addableCount}
                     onClick={() => addBuild(build)}
                   >
-                    ADD {addableCount} AVAILABLE {addableCount === 1 ? "CARD" : "CARDS"} TO BUILDER <span>↗</span>
+                    {t(addableCount === 1 ? "meta.addAvailableOne" : "meta.addAvailableMany", { count: addableCount })} <span>↗</span>
                   </button>
                 </article>
               );
@@ -242,25 +247,28 @@ export function MetaWatch({
           <section className="tips-section">
             <div className="tips-section-heading">
               <div>
-                <div className="eyebrow"><span /> KNOW-HOW BETWEEN PLAYERS</div>
-                <h2>Tips &amp; <em>tricks.</em></h2>
+                <div className="eyebrow"><span /> {t("meta.knowHow")}</div>
+                {(() => {
+                  const [title, emphasis = ""] = t("meta.tipsTitle").split("|");
+                  return <h2>{title}<em>{emphasis}</em></h2>;
+                })()}
               </div>
-              <span className="community-tag">COMMUNITY TIPS · UNVERIFIED</span>
+              <span className="community-tag">{t("meta.communityTips")}</span>
             </div>
             <div className="community-tip-grid">
               {communityTips.map((tip) => {
                 const relatedCard = catalogue.cards.find((card) => card.slug === tip.relatedSlug);
                 return (
-                  <article className="community-tip" key={tip.title}>
+                  <article className="community-tip" key={tip.relatedSlug}>
                     <div className="tip-icon" aria-hidden="true">✳</div>
                     <div className="tip-content">
-                      <span className="tip-category">{tip.category}</span>
-                      <h3>{tip.title}</h3>
-                      <p>{tip.text}</p>
+                      <span className="tip-category">{t("meta.tip.category")}</span>
+                      <h3>{t("meta.tip.title")}</h3>
+                      <p>{t("meta.tip.text")}</p>
                       {relatedCard && (
                         <button className="tip-card-link" onClick={() => onSelectCard(relatedCard)}>
                           <img src={imageUrl(relatedCard.artwork.tiny)} alt="" loading="lazy" />
-                          {tip.relatedLabel} <span>↗</span>
+                          {t("meta.tip.viewCard")} <span>↗</span>
                         </button>
                       )}
                     </div>
@@ -271,7 +279,7 @@ export function MetaWatch({
           </section>
         </div>
       )}
-      <div className="meta-source-note"><span>✳</span><p>Win rates, rankings, and deck rules aren’t supplied by the card catalogue. These player-submitted combinations are presented as suggestions only.</p></div>
+      <div className="meta-source-note"><span>✳</span><p>{t("meta.sourceNote")}</p></div>
     </>
   );
 }

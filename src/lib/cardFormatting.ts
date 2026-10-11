@@ -1,5 +1,5 @@
-export function formatUpdateDate(value: string): string {
-  return new Intl.DateTimeFormat("en", {
+export function formatUpdateDate(value: string, locale = "en"): string {
+  return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",

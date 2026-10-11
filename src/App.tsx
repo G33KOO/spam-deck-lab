@@ -28,6 +28,10 @@ function App() {
     deckCards,
     deckCount,
     changeDeck,
+    addAlternative,
+    selectAlternative,
+    removeAlternative,
+    deckNotice,
     copied,
     copyError,
     copyDeck,
@@ -72,6 +76,13 @@ function App() {
     setSort("number");
   }
 
+  const cardAlreadyInDeck = selectedCard
+    ? deckCards.some((slot) =>
+      slot.card.id === selectedCard.id ||
+      slot.alternatives.some((option) => option.id === selectedCard.id),
+    )
+    : false;
+
   return (
     <div className="app-shell">
       <AppShell activeView={activeView} deckCount={deckCount} onNavigate={setActiveView}>
@@ -84,6 +95,7 @@ function App() {
             onSelectCard={setSelectedCard}
             onAddCard={(card) => changeDeck(card, 1)}
             deck={deck}
+            deckCount={deckCount}
           />
         )}
         {activeView === "cards" && (
@@ -101,8 +113,6 @@ function App() {
             sort={sort}
             setSort={setSort}
             onSelectCard={setSelectedCard}
-            onAddCard={(card) => changeDeck(card, 1)}
-            deck={deck}
             onReset={resetFilters}
             onNavigate={setActiveView}
             elementName={elementName}
@@ -115,10 +125,21 @@ function App() {
             cards={filteredCards}
             deckCards={deckCards}
             deckCount={deckCount}
+            deckNotice={deckNotice}
             search={search}
             setSearch={setSearch}
+            selectedElement={selectedElement}
+            setSelectedElement={setSelectedElement}
+            selectedRarity={selectedRarity}
+            setSelectedRarity={setSelectedRarity}
+            sort={sort}
+            setSort={setSort}
+            onReset={resetFilters}
             searchInputRef={searchInputRef}
             onChangeDeck={changeDeck}
+            onAddAlternative={addAlternative}
+            onSelectAlternative={selectAlternative}
+            onRemoveAlternative={removeAlternative}
             onSelectCard={setSelectedCard}
             copied={copied}
             copyError={copyError}
@@ -139,6 +160,8 @@ function App() {
             onNavigate={setActiveView}
             onSelectCard={setSelectedCard}
             onAddCards={(cards) => cards.forEach((card) => changeDeck(card, 1))}
+            deckCards={deckCards}
+            deckCount={deckCount}
             elementName={elementName}
           />
         )}
@@ -151,6 +174,8 @@ function App() {
           elementName={elementName}
           rarityName={rarityName}
           deckCount={deck[selectedCard.id] ?? 0}
+          canAddCard={!cardAlreadyInDeck && deckCount < 4}
+          cardAlreadyInDeck={cardAlreadyInDeck}
           onClose={() => setSelectedCard(null)}
           onAdd={() => changeDeck(selectedCard, 1)}
         />

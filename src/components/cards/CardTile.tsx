@@ -1,5 +1,6 @@
 import type { CardData } from "../../types";
 import { GameCardFace } from "./GameCardFace";
+import { useTranslation } from "../../i18n/LanguageContext";
 
 export function CardTile({
   card,
@@ -7,41 +8,48 @@ export function CardTile({
   onSelect,
   onAdd,
   onRemove,
-  quantity,
+  quantity = 0,
   deckMode = false,
+  addLabel,
+  addDisabled = false,
+  hideAdd = false,
 }: {
   card: CardData;
   elementLabel: string;
   onSelect: () => void;
-  onAdd: () => void;
+  onAdd?: () => void;
   onRemove?: () => void;
-  quantity: number;
+  quantity?: number;
   deckMode?: boolean;
+  addLabel?: string;
+  addDisabled?: boolean;
+  hideAdd?: boolean;
 }) {
+  const { t } = useTranslation();
+
   return (
-    <article className={`collection-card element-${card.element}`}>
-      <button className="tile-art-button" onClick={onSelect} aria-label={`View ${card.name} details`}>
+    <article className={`collection-card element-${card.element} ${addLabel ? "collection-card-addable" : ""}`}>
+      <button className="tile-art-button" onClick={onSelect} aria-label={t("card.viewDetails", { name: card.name })}>
         <div className="tile-art">
           <GameCardFace card={card} elementLabel={elementLabel} />
         </div>
       </button>
-      <div className="tile-card-actions" onClick={(event) => event.stopPropagation()}>
+      {!hideAdd && <div className="tile-card-actions" onClick={(event) => event.stopPropagation()}>
         {deckMode ? (
-          <div className="quantity-stepper">
-            <button onClick={onRemove} aria-label={`Remove one ${card.name}`}>−</button>
-            <span>{quantity}</span>
-            <button onClick={onAdd} aria-label={`Add one ${card.name}`}>+</button>
-          </div>
+          <button className="remove-deck-card" onClick={onRemove} aria-label={t("builder.removeCardLabel", { name: card.name })}>
+            {t("builder.removeCard")}
+          </button>
         ) : (
           <button
             className={`add-card-button ${quantity ? "has-count" : ""}`}
-            onClick={(event) => { event.stopPropagation(); onAdd(); }}
-            aria-label={`Add ${card.name} to deck`}
+            onClick={(event) => { event.stopPropagation(); onAdd?.(); }}
+            aria-label={t("card.addLabel", { name: card.name })}
+            disabled={addDisabled}
           >
-            {quantity ? `+ ${quantity}` : "+"}
+            {addLabel ? <>{addLabel}{quantity ? ` · ${quantity}` : ""}</> : quantity ? `+ ${quantity}` : "+"}
           </button>
         )}
-      </div>
+      </div>}
     </article>
   );
 }

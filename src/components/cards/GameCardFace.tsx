@@ -1,11 +1,14 @@
 import { useState } from "react";
 import type { CardData } from "../../types";
 import { imageUrl } from "../../lib/cardAssets";
+import { useTranslation } from "../../i18n/LanguageContext";
 import "./GameCardFace.css";
 
 export function GameCardFace({ card, elementLabel }: { card: CardData; elementLabel: string }) {
   const [hoverInfo, setHoverInfo] = useState<{ title: string; effect: string; meta?: string } | null>(null);
+  const { t } = useTranslation();
   const resist = card.resistances[card.element];
+  const resistance = resist === undefined ? t("card.notListed") : `${resist}%`;
   const rows = [
     ...(card.abilities ?? []).map((ability) => ({
       kind: "attack" as const,
@@ -14,9 +17,9 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       effect: ability.effect,
       cooldown: ability.cooldown,
       meta: [
-        ability.cooldown !== undefined ? `Cooldown ${ability.cooldown}` : "",
-        ability.precision !== undefined ? `${ability.precision}% precision` : "",
-        ability.critChance !== undefined ? `${ability.critChance}% crit chance` : "",
+      ability.cooldown !== undefined ? t("card.cooldown", { count: ability.cooldown }) : "",
+      ability.precision !== undefined ? t("card.precision", { count: ability.precision }) : "",
+      ability.critChance !== undefined ? t("card.critChance", { count: ability.critChance }) : "",
       ].filter(Boolean).join(" · "),
     })),
     ...(card.skills ?? []).map((skill) => ({
@@ -25,7 +28,7 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       name: skill.name,
       effect: skill.effect,
       rarity: skill.rarity ?? "common",
-      meta: skill.rarity ? `${rarityNameForCard(skill.rarity)} passive` : "Passive skill",
+      meta: skill.rarity ? t("card.passiveRarity", { rarity: rarityNameForCard(skill.rarity) }) : t("card.passiveSkill"),
     })),
   ].slice(0, 3);
 
@@ -38,11 +41,11 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       </div>
       <span
         className="game-card-element-zone"
-        title={`Element: ${elementLabel}. Card resistance to ${elementLabel}: ${resist === undefined ? "not listed" : `${resist}%`}.`}
+        title={`${t("card.element", { name: elementLabel })}. ${t("card.resistance", { name: elementLabel, value: resistance })}.`}
         onMouseEnter={() => setHoverInfo({
-          title: `ELEMENT · ${elementLabel}`,
-          effect: "Elemental type used by this card.",
-          meta: `This card's resistance to ${elementLabel}: ${resist === undefined ? "not listed" : `${resist}%`}`,
+          title: t("card.element", { name: elementLabel }),
+          effect: t("card.elementDescription"),
+          meta: t("card.resistance", { name: elementLabel, value: resistance }),
         })}
       >
         <img className="game-card-element" src={imageUrl(`img/elements/${card.element}.webp`)} alt="" />
@@ -55,7 +58,7 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
           style={{ top: `${((759 + index * 148) / 1375) * 100}%` }}
           title={`${row.name}: ${row.effect}`}
           onMouseEnter={() => setHoverInfo({
-            title: `${row.kind === "attack" ? "ATTACK" : "PASSIVE"} · ${row.name}`,
+            title: `${t(row.kind === "attack" ? "card.attack" : "card.passive")} · ${row.name}`,
             effect: row.effect,
             meta: row.meta,
           })}
@@ -89,11 +92,11 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       <div className="game-card-hp">{card.hp.toLocaleString()}/{card.hp.toLocaleString()}</div>
       <div
         className="game-card-spamton"
-        title={`${card.spamton} Spamton gained each turn.`}
+        title={t("card.spamtonTitle", { count: card.spamton })}
         onMouseEnter={() => setHoverInfo({
-          title: "SPAMTON",
-          effect: "Nombre de Spamtons gagnés à chaque tour.",
-          meta: `${card.spamton} par tour`,
+          title: t("card.spamton"),
+          effect: t("card.spamtonHelp"),
+          meta: t("card.perTurn", { count: card.spamton }),
         })}
       >
         <img src={imageUrl("img/frame/spamton.webp")} alt="" />

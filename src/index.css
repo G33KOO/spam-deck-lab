@@ -122,7 +122,30 @@ a {
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 26px;
+  gap: 15px;
+}
+
+.language-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  background: #171918;
+}
+
+.language-switch button {
+  min-width: 29px;
+  padding: 5px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 9px var(--mono);
+}
+
+.language-switch button[aria-pressed="true"] {
+  background: var(--acid);
+  color: #151713;
 }
 
 .live-indicator,
@@ -693,22 +716,33 @@ a {
 .card-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 46px 42px;
 }
 
 .collection-card {
+  position: relative;
+  z-index: 0;
   min-width: 0;
   overflow: visible;
   border: 0;
   background: transparent;
   cursor: pointer;
-  transition: none;
+  transform-origin: center center;
+  transition: transform 180ms ease, filter 180ms ease;
 }
 
 .collection-card:hover {
+  z-index: 10;
   border-color: transparent;
   background: transparent;
-  transform: none;
+  filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.55));
+  transform: translateY(-5px) scale(1.1);
+}
+
+.collection-card:focus-within {
+  z-index: 10;
+  filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.55));
+  transform: translateY(-5px) scale(1.1);
 }
 
 .tile-art-button {
@@ -1003,8 +1037,8 @@ kbd {
 
 .card-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 15px;
-  padding-bottom: 30px;
+  gap: 46px 42px;
+  padding: 24px 20px 48px;
 }
 
 .notice {
@@ -2597,7 +2631,7 @@ kbd {
 
   .card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
+    gap: 36px;
   }
 
   .builder-layout {
@@ -2719,9 +2753,10 @@ kbd {
 }
 
 .builder-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 21px;
+  --deck-panel-width: min(40vw, 520px);
+  --deck-panel-right: max(clamp(24px, 4.2vw, 66px), calc((100vw - 1611px) / 2));
+  display: block;
+  padding-right: calc(var(--deck-panel-width) + 32px);
   min-height: 0;
   border: 0;
   background: transparent;
@@ -2735,7 +2770,26 @@ kbd {
   background: #171918;
 }
 
+.builder-pool {
+  width: auto;
+  grid-column: 1;
+  grid-row: 1;
+}
+
 .deck-panel {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  z-index: 15;
+  top: 84px;
+  right: var(--deck-panel-right);
+  bottom: 18px;
+  width: var(--deck-panel-width);
+  max-height: calc(100vh - 102px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: #41463e transparent;
+  scrollbar-width: thin;
   background:
     radial-gradient(ellipse at 100% 0%, rgba(217, 255, 87, 0.045), transparent 43%),
     #171918;
@@ -2756,10 +2810,9 @@ kbd {
 .deck-card-grid,
 .builder-card-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: start;
-  gap: 12px;
-  padding: 15px 0;
+  gap: 24px 22px;
+  padding: 20px 16px 24px;
 }
 
 .deck-card-grid .collection-card,
@@ -2767,9 +2820,109 @@ kbd {
   min-width: 0;
 }
 
-.deck-card-grid .tile-art,
-.builder-card-grid .tile-art {
-  aspect-ratio: 358 / 512;
+.deck-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 150px));
+  justify-content: center;
+  gap: 16px 20px;
+  padding: 12px 0 16px;
+}
+
+.builder-card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.deck-slot {
+  min-width: 0;
+}
+
+.deck-card-grid .tile-art {
+  aspect-ratio: 961 / 1375;
+}
+
+.deck-slot-alternatives {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+}
+
+.deck-slot-alternatives > span:first-child {
+  width: 100%;
+  color: #879082;
+  font: 7px var(--mono);
+  letter-spacing: 0.08em;
+}
+
+.deck-option-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.deck-option-chip,
+.remove-option {
+  min-width: 0;
+  padding: 5px 7px;
+  border: 1px solid #3b4237;
+  border-radius: 3px;
+  background: #111311;
+  color: #dce3d2;
+  font-size: 9px;
+}
+
+.deck-option-chip[aria-pressed="true"] {
+  border-color: var(--acid);
+  color: var(--acid);
+}
+
+.remove-option {
+  padding-right: 5px;
+  padding-left: 5px;
+  color: #a6ada0;
+}
+
+.add-alternative-button {
+  width: 100%;
+  margin-top: 7px;
+  padding: 7px 5px;
+  border: 1px dashed #41483c;
+  background: transparent;
+  color: #bec8b4;
+  font: 7px var(--mono);
+  letter-spacing: 0.04em;
+}
+
+.add-alternative-button:hover,
+.add-alternative-button.active {
+  border-color: var(--acid);
+  color: var(--acid);
+}
+
+.alternative-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 9px 11px;
+  border: 1px solid #58613e;
+  background: rgba(217, 255, 87, 0.06);
+  color: #d9dfd1;
+  font-size: 10px;
+}
+
+.alternative-mode strong {
+  color: var(--acid);
+}
+
+.alternative-mode button {
+  flex: 0 0 auto;
+  padding: 5px 0 5px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--acid);
+  font: 8px var(--mono);
 }
 
 .builder-pool {
@@ -2787,12 +2940,10 @@ kbd {
 }
 
 .builder-card-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  max-height: 780px;
-  overflow-y: auto;
-  padding: 14px 2px 8px 0;
-  scrollbar-color: #41463e transparent;
-  scrollbar-width: thin;
+  max-height: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: visible;
+  padding: 20px 18px 12px;
 }
 
 .builder-card-grid .empty-state {
@@ -2842,11 +2993,12 @@ kbd {
 .build-options {
   grid-template-columns: repeat(auto-fill, minmax(102px, 1fr));
   align-items: start;
-  gap: 7px;
+  gap: 36px;
 }
 
 .build-option {
   position: relative;
+  z-index: 0;
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -2859,8 +3011,13 @@ kbd {
 }
 
 .build-option:hover {
+  z-index: 6;
   border-color: transparent;
   background: transparent;
+}
+
+.build-option:focus-visible {
+  z-index: 6;
 }
 
 .build-option.selected {
@@ -2887,8 +3044,15 @@ kbd {
   transition: transform 200ms ease;
 }
 
-.build-option:hover .build-option-art > img {
-  transform: scale(1.035);
+.build-option-art > .game-card-face {
+  transform-origin: center center;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.build-option:hover .build-option-art > .game-card-face,
+.build-option:focus-visible .build-option-art > .game-card-face {
+  filter: drop-shadow(0 12px 12px rgba(0, 0, 0, 0.5));
+  transform: scale(1.1);
 }
 
 .build-option-art .unmatched-icon {
@@ -2945,10 +3109,38 @@ kbd {
   min-height: 0;
 }
 
-@media (max-width: 1050px) {
-  .deck-card-grid,
+@media (max-width: 1200px) {
+  .builder-layout {
+    padding-right: 0;
+  }
+
   .builder-card-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .builder-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 0;
+  }
+
+  .builder-pool {
+    width: auto;
+    grid-column: 1;
+    grid-row: 2;
+    border-right: 0;
+  }
+
+  .deck-panel {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    max-height: none;
+    overflow: visible;
+    grid-column: 1;
+    grid-row: 1;
+    margin-bottom: 20px;
   }
 }
 
@@ -2958,8 +3150,19 @@ kbd {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .deck-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
   .builder-card-grid {
-    max-height: 660px;
+    max-height: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .deck-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 150px));
+    justify-content: center;
   }
 }
 
@@ -2972,11 +3175,11 @@ kbd {
   .deck-card-grid,
   .builder-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
+    gap: 36px;
   }
 
   .builder-card-grid {
-    max-height: 660px;
+    max-height: none;
   }
 
   .build-slots {
@@ -3068,6 +3271,32 @@ kbd {
   color: var(--acid);
 }
 
+.collection-card-addable .tile-card-actions {
+  position: static;
+  z-index: auto;
+  margin-top: 8px;
+  opacity: 1;
+  transition: none;
+}
+
+.collection-card-addable .tile-card-actions .add-card-button {
+  width: 100%;
+  min-height: 34px;
+  height: auto;
+  padding: 6px 4px;
+  border-radius: 3px;
+  font: 7px var(--mono);
+  letter-spacing: 0.015em;
+}
+
+.collection-card-addable .tile-card-actions .add-card-button:disabled {
+  border-color: #3b4038;
+  background: #20231f;
+  color: #a2aa9a;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
 .tile-card-actions .add-card-button:hover,
 .tile-card-actions .add-card-button.has-count {
   background: var(--acid);
@@ -3089,6 +3318,22 @@ kbd {
 
 .tile-card-actions .quantity-stepper span {
   min-width: 15px;
+}
+
+.remove-deck-card {
+  width: 100%;
+  min-height: 30px;
+  border: 1px solid #493b36;
+  background: rgba(20, 15, 13, 0.9);
+  color: #e6aa96;
+  font: 7px var(--mono);
+  letter-spacing: 0.06em;
+}
+
+.remove-deck-card:hover {
+  border-color: #b96953;
+  background: #3a211c;
+  color: #ffd0bf;
 }
 
 .build-option-art {
@@ -3131,6 +3376,19 @@ kbd {
 }
 
 @media (max-width: 590px) {
+  .builder-pool,
+  .deck-panel {
+    grid-column: 1;
+  }
+
+  .builder-pool {
+    grid-row: 2;
+  }
+
+  .deck-panel {
+    grid-row: 1;
+  }
+
   .deck-panel-top {
     align-items: flex-start;
   }

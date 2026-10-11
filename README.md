@@ -3,6 +3,10 @@
 A React companion for SPAM with a searchable card library, detailed card views,
 and a lightweight deck builder.
 
+The interface is available in French and English (French by default). Card
+names and descriptions remain in the language supplied by the official card
+catalogue.
+
 ## Run locally
 
 ```sh
@@ -31,9 +35,10 @@ the app.
 
 The catalogue does not include deck lists or meta rankings. The Meta Watch page
 states this limitation rather than displaying unverified deck recommendations.
-Decks in the builder stay in the current browser session. Use **Share Link** to
-copy a URL containing the deck name and card slugs/counts; opening that link
-reconstructs the shared deck without a backend. **Copy List** exports a
+Decks in the builder stay in the current browser session. Build up to four
+unique cards and set optional alternatives for each slot. Use **Share Link** to
+copy a URL containing the deck name, card slugs, and alternatives; opening that
+link reconstructs the deck without a backend. **Copy List** exports a
 plain-text card list.
 
 ## Project structure
