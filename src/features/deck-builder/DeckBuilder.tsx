@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CardCatalogue, CardData, CardSortOption } from "../../types";
 import type { DeckCardSlot } from "../../hooks/useDeck";
 import { CardTile } from "../../components/cards/CardTile";
@@ -69,8 +69,22 @@ export function DeckBuilder({
   elementName: (id: string) => string;
 }) {
   const { t } = useTranslation();
+  const [collectionOpen, setCollectionOpen] = useState(false);
   const [alternativeTarget, setAlternativeTarget] = useState<string | null>(null);
   const targetSlot = deckCards.find((slot) => slot.id === alternativeTarget);
+
+  useEffect(() => {
+    if (!collectionOpen) return;
+    searchInputRef.current?.focus();
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        closeCollection();
+      }
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [collectionOpen, searchInputRef]);
 
   function addSelectedCard(card: CardData) {
     if (alternativeTarget) {
@@ -79,6 +93,17 @@ export function DeckBuilder({
     } else {
       onChangeDeck(card, 1);
     }
+    setCollectionOpen(false);
+  }
+
+  function closeCollection() {
+    setCollectionOpen(false);
+    setAlternativeTarget(null);
+  }
+
+  function openCollection(slotId: string | null = null) {
+    setAlternativeTarget(slotId);
+    setCollectionOpen(true);
   }
 
   return (
@@ -92,92 +117,6 @@ export function DeckBuilder({
       {!catalogue && !error ? <LoadingState /> : catalogue && (
         <>
           <div className="builder-layout">
-            <section className="builder-pool">
-              <div className="builder-section-heading">
-                <div><span className="eyebrow"><span /> {t("builder.collection")}</span><h2>{t("builder.chooseCards")}</h2></div>
-                <span className="pool-count">{t("builder.cardCount", { count: cards.length })}</span>
-              </div>
-              {targetSlot && (
-                <div className="alternative-mode" role="status">
-                  <span>{t("builder.alternativePrompt", { name: targetSlot.card.name })}</span>
-                  <button onClick={() => setAlternativeTarget(null)}>{t("builder.cancel")}</button>
-                </div>
-              )}
-              <div className="filter-panel builder-filter-panel">
-                <label className="search-field builder-search">
-                  <SearchIcon />
-                  <input
-                    ref={searchInputRef}
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder={t("builder.searchPlaceholder")}
-                    aria-label={t("builder.searchLabel")}
-                  />
-                  <kbd>/</kbd>
-                </label>
-                <label className="select-field">
-                  <span>{t("filter.element")}</span>
-                  <select value={selectedElement} onChange={(event) => setSelectedElement(event.target.value)}>
-                    <option value="all">{t("filter.allElements")}</option>
-                    {catalogue.elements.map((element) => <option key={element.id} value={element.id}>{element.name}</option>)}
-                  </select>
-                </label>
-                <label className="select-field">
-                  <span>{t("filter.rarity")}</span>
-                  <select value={selectedRarity} onChange={(event) => setSelectedRarity(event.target.value)}>
-                    <option value="all">{t("filter.allRarities")}</option>
-                    {catalogue.rarities.map((rarity) => <option key={rarity.id} value={rarity.id}>{rarity.name}</option>)}
-                  </select>
-                </label>
-                <label className="select-field sort-field">
-                  <span>{t("filter.sort")}</span>
-                  <select value={sort} onChange={(event) => setSort(event.target.value as CardSortOption)}>
-                    <option value="number">{t("filter.cardNumber")}</option>
-                    <option value="name">{t("filter.name")}</option>
-                    <option value="hp">{t("filter.highestHp")}</option>
-                    <option value="spamton">{t("filter.lowestSpamton")}</option>
-                  </select>
-                </label>
-              </div>
-              <div className="results-line builder-results-line">
-                <span><strong>{cards.length}</strong> {t("builder.results", { count: cards.length })}</span>
-                {(search || selectedElement !== "all" || selectedRarity !== "all" || sort !== "number") && (
-                  <button onClick={onReset}>{t("filter.clear")} <span>×</span></button>
-                )}
-              </div>
-              <div className="builder-card-grid">
-                {cards.map((card) => {
-                  const cardIsInTarget = Boolean(targetSlot && (
-                    targetSlot.card.id === card.id ||
-                    targetSlot.alternatives.some((option) => option.id === card.id)
-                  ));
-                  const cardIsInAnotherSlot = deckCards.some((slot) =>
-                    slot.id !== alternativeTarget &&
-                    (slot.card.id === card.id || slot.alternatives.some((option) => option.id === card.id)),
-                  );
-                  const cardIsInDeck = deckCards.some((slot) =>
-                    slot.card.id === card.id || slot.alternatives.some((option) => option.id === card.id),
-                  );
-                  const addLabelKey = targetSlot
-                    ? cardIsInTarget || cardIsInAnotherSlot ? "builder.alreadyInSlot" : "builder.addOption"
-                    : cardIsInDeck ? "builder.alreadyInDeck" : deckCount >= 4 ? "builder.deckFull" : "builder.addToDeck";
-                  return (
-                    <CardTile
-                      key={card.id}
-                      card={card}
-                      elementLabel={elementName(card.element)}
-                      onSelect={() => onSelectCard(card)}
-                      onAdd={() => addSelectedCard(card)}
-                      quantity={cardIsInDeck ? 1 : 0}
-                      addLabel={t(addLabelKey)}
-                      addDisabled={targetSlot ? cardIsInTarget || cardIsInAnotherSlot : cardIsInDeck || deckCount >= 4}
-                    />
-                  );
-                })}
-                {!cards.length && <div className="empty-state"><span>⌕</span><h3>{t("filter.noMatches")}</h3><p>{t("filter.trySearch")}</p></div>}
-              </div>
-            </section>
-
             <section className="deck-panel">
               <div className="deck-panel-top">
                 <div className="deck-heading-copy">
@@ -191,6 +130,15 @@ export function DeckBuilder({
                   />
                 </div>
                 <div className="deck-header-actions">
+                  <button
+                    className="deck-add-card-button"
+                    type="button"
+                    onClick={() => openCollection()}
+                    aria-label={t("builder.openCollection")}
+                  >
+                    <span aria-hidden="true">＋</span>
+                    {t("builder.openCollection")}
+                  </button>
                   <button className="deck-menu" onClick={onSave} title={t("builder.saveDeck")}>{t("builder.saveDeck")}</button>
                   <button className="deck-menu" onClick={onShare} title={t("builder.shareLink")}>{shareCopied ? `${t("builder.linkCopied")} ✓` : `${t("builder.shareLink")} ↗`}</button>
                   <button className="deck-menu" onClick={onCopy} title={t("builder.copyList")}>{copied ? `${t("builder.listCopied")} ✓` : `${t("builder.copyList")} ↗`}</button>
@@ -268,16 +216,23 @@ export function DeckBuilder({
                       )}
                       <button
                         className={`add-alternative-button ${alternativeTarget === id ? "active" : ""}`}
-                        onClick={() => setAlternativeTarget(alternativeTarget === id ? null : id)}
+                        onClick={() => openCollection(alternativeTarget === id ? null : id)}
                       >
-                        {alternativeTarget === id ? t("builder.cancelAlternative") : t("builder.addAlternative")}
+                        {t("builder.addAlternative")}
                       </button>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="empty-deck">
-                  <span className="empty-card-icon">＋</span>
+                  <button
+                    className="empty-card-icon"
+                    type="button"
+                    onClick={() => openCollection()}
+                    aria-label={t("builder.openCollection")}
+                  >
+                    ＋
+                  </button>
                   <strong>{t("builder.emptyTitle")}</strong>
                   <p>{t("builder.emptyText")}</p>
                 </div>
@@ -299,7 +254,116 @@ export function DeckBuilder({
               )}
             </section>
           </div>
-          <p className="builder-footnote">{t("builder.footnote")}</p>
+          {collectionOpen && (
+            <div
+              className="builder-collection-backdrop"
+              onClick={(event) => {
+                if (event.target === event.currentTarget) closeCollection();
+              }}
+            >
+              <section
+                className="builder-collection-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="builder-collection-title"
+              >
+                <header className="builder-collection-header">
+                  <div>
+                    <span className="eyebrow"><span /> {t("builder.collection")}</span>
+                    <h2 id="builder-collection-title">{t("builder.chooseCards")}</h2>
+                  </div>
+                  <button
+                    className="builder-collection-close"
+                    type="button"
+                    onClick={closeCollection}
+                    aria-label={t("builder.closeCollection")}
+                  >
+                    ×
+                  </button>
+                </header>
+                {targetSlot && (
+                  <div className="alternative-mode" role="status">
+                    <span>{t("builder.alternativePrompt", { name: targetSlot.card.name })}</span>
+                    <button onClick={() => setAlternativeTarget(null)}>{t("builder.cancel")}</button>
+                  </div>
+                )}
+                <div className="filter-panel builder-filter-panel">
+                  <label className="search-field builder-search">
+                    <SearchIcon />
+                    <input
+                      ref={searchInputRef}
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder={t("builder.searchPlaceholder")}
+                      aria-label={t("builder.searchLabel")}
+                    />
+                    <kbd>/</kbd>
+                  </label>
+                  <label className="select-field">
+                    <span>{t("filter.element")}</span>
+                    <select value={selectedElement} onChange={(event) => setSelectedElement(event.target.value)}>
+                      <option value="all">{t("filter.allElements")}</option>
+                      {catalogue.elements.map((element) => <option key={element.id} value={element.id}>{element.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="select-field">
+                    <span>{t("filter.rarity")}</span>
+                    <select value={selectedRarity} onChange={(event) => setSelectedRarity(event.target.value)}>
+                      <option value="all">{t("filter.allRarities")}</option>
+                      {catalogue.rarities.map((rarity) => <option key={rarity.id} value={rarity.id}>{rarity.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="select-field sort-field">
+                    <span>{t("filter.sort")}</span>
+                    <select value={sort} onChange={(event) => setSort(event.target.value as CardSortOption)}>
+                      <option value="number">{t("filter.cardNumber")}</option>
+                      <option value="name">{t("filter.name")}</option>
+                      <option value="hp">{t("filter.highestHp")}</option>
+                      <option value="spamton">{t("filter.lowestSpamton")}</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="results-line builder-results-line">
+                  <span><strong>{cards.length}</strong> {t("builder.results", { count: cards.length })}</span>
+                  {(search || selectedElement !== "all" || selectedRarity !== "all" || sort !== "number") && (
+                    <button onClick={onReset}>{t("filter.clear")} <span>×</span></button>
+                  )}
+                </div>
+                <div className="builder-card-grid builder-modal-card-grid">
+                  {cards.map((card) => {
+                    const cardIsInTarget = Boolean(targetSlot && (
+                      targetSlot.card.id === card.id ||
+                      targetSlot.alternatives.some((option) => option.id === card.id)
+                    ));
+                    const cardIsInAnotherSlot = deckCards.some((slot) =>
+                      slot.id !== alternativeTarget &&
+                      (slot.card.id === card.id || slot.alternatives.some((option) => option.id === card.id)),
+                    );
+                    const cardIsInDeck = deckCards.some((slot) =>
+                      slot.card.id === card.id || slot.alternatives.some((option) => option.id === card.id),
+                    );
+                    const addLabelKey = targetSlot
+                      ? cardIsInTarget || cardIsInAnotherSlot ? "builder.alreadyInSlot" : "builder.addOption"
+                      : cardIsInDeck ? "builder.alreadyInDeck" : deckCount >= 4 ? "builder.deckFull" : "builder.addToDeck";
+                    return (
+                      <CardTile
+                        key={card.id}
+                        card={card}
+                        elementLabel={elementName(card.element)}
+                        onSelect={() => onSelectCard(card)}
+                        selectable={false}
+                        onAdd={() => addSelectedCard(card)}
+                        quantity={cardIsInDeck ? 1 : 0}
+                        addLabel={t(addLabelKey)}
+                        addDisabled={targetSlot ? cardIsInTarget || cardIsInAnotherSlot : cardIsInDeck || deckCount >= 4}
+                      />
+                    );
+                  })}
+                  {!cards.length && <div className="empty-state"><span>⌕</span><h3>{t("filter.noMatches")}</h3><p>{t("filter.trySearch")}</p></div>}
+                </div>
+              </section>
+            </div>
+          )}
         </>
       )}
     </>

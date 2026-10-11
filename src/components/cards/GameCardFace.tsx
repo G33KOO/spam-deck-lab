@@ -11,7 +11,15 @@ interface TooltipMeta {
   icon?: string;
 }
 
-export function GameCardFace({ card, elementLabel }: { card: CardData; elementLabel: string }) {
+export function GameCardFace({
+  card,
+  elementLabel,
+  abilityHoverOnly = false,
+}: {
+  card: CardData;
+  elementLabel: string;
+  abilityHoverOnly?: boolean;
+}) {
   const [hoverInfo, setHoverInfo] = useState<{
     title: string;
     effect: string;
@@ -117,7 +125,7 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
   }
 
   return (
-    <div className="game-card-face">
+    <div className={`game-card-face ${abilityHoverOnly ? "ability-hover-only" : ""}`}>
       <div className="game-card-clip">
         <img className="game-card-artwork" src={imageUrl(card.artwork.small)} alt="" loading="lazy" />
         <img className="game-card-frame" src={imageUrl(`img/frame/body-${card.element}.webp`)} alt="" />
@@ -125,12 +133,12 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       </div>
       <span
         className="game-card-element-zone"
-        onMouseEnter={(event) => showHoverInfo(event, {
-          title: t("card.element", { name: elementLabel }),
-          effect: t("card.elementDescription"),
-          meta: [{ label: t("card.resistance", { name: elementLabel, value: resistance }) }],
-        })}
-        onMouseLeave={scheduleTooltipDismissal}
+        onMouseEnter={abilityHoverOnly ? undefined : (event) => showHoverInfo(event, {
+            title: t("card.element", { name: elementLabel }),
+            effect: t("card.elementDescription"),
+            meta: [{ label: t("card.resistance", { name: elementLabel, value: resistance }) }],
+          })}
+        onMouseLeave={abilityHoverOnly ? undefined : scheduleTooltipDismissal}
       >
         <img className="game-card-element" src={imageUrl(`img/elements/${card.element}.webp`)} alt="" />
       </span>
@@ -176,12 +184,12 @@ export function GameCardFace({ card, elementLabel }: { card: CardData; elementLa
       <div className="game-card-hp">{card.hp.toLocaleString()}/{card.hp.toLocaleString()}</div>
       <div
         className="game-card-spamton"
-        onMouseEnter={(event) => showHoverInfo(event, {
-          title: t("card.spamton"),
-          effect: t("card.spamtonHelp"),
-          meta: [{ label: t("card.perTurn", { count: card.spamton }) }],
-        })}
-        onMouseLeave={scheduleTooltipDismissal}
+        onMouseEnter={abilityHoverOnly ? undefined : (event) => showHoverInfo(event, {
+            title: t("card.spamton"),
+            effect: t("card.spamtonHelp"),
+            meta: [{ label: t("card.perTurn", { count: card.spamton }) }],
+          })}
+        onMouseLeave={abilityHoverOnly ? undefined : scheduleTooltipDismissal}
       >
         <img src={imageUrl("img/frame/spamton.webp")} alt="" />
         <strong>{card.spamton}</strong>

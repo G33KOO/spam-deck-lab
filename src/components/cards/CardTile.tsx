@@ -14,6 +14,7 @@ export function CardTile({
   addDisabled = false,
   hideAdd = false,
   showQuantityCount = true,
+  selectable = true,
 }: {
   card: CardData;
   elementLabel: string;
@@ -26,14 +27,21 @@ export function CardTile({
   addDisabled?: boolean;
   hideAdd?: boolean;
   showQuantityCount?: boolean;
+  selectable?: boolean;
 }) {
   const { t } = useTranslation();
 
   return (
-    <article className={`collection-card element-${card.element} ${addLabel ? "collection-card-addable" : ""}`}>
-      <button className="tile-art-button" onClick={onSelect} aria-label={t("card.viewDetails", { name: card.name })}>
+    <article className={`collection-card element-${card.element} ${addLabel ? "collection-card-addable" : ""} ${!selectable ? "collection-card-not-selectable" : ""}`}>
+      <button
+        className="tile-art-button"
+        onClick={onSelect}
+        aria-label={t("card.viewDetails", { name: card.name })}
+        disabled={!selectable}
+        aria-disabled={!selectable}
+      >
         <div className="tile-art">
-          <GameCardFace card={card} elementLabel={elementLabel} />
+          <GameCardFace card={card} elementLabel={elementLabel} abilityHoverOnly={!selectable} />
         </div>
       </button>
       {!hideAdd && <div className="tile-card-actions" onClick={(event) => event.stopPropagation()}>
