@@ -4,7 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "theme:light": "node scripts/generate-light-theme.mjs",
+    "predev": "npm run theme:light",
     "dev": "vite",
+    "prebuild": "npm run theme:light",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
@@ -17,6 +20,7 @@
   "devDependencies": {
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "postcss": "^8.5.0",
     "typescript": "~5.7.2"
   }
 }

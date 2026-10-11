@@ -160,6 +160,26 @@ a {
   color: #151713;
 }
 
+.theme-toggle {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #171918;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  border-color: var(--acid);
+  color: var(--acid);
+}
+
 .live-indicator,
 .steam-link {
   display: inline-flex;

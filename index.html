@@ -8,6 +8,13 @@
       name="description"
       content="Le compagnon communautaire de SPAM : parcourez les cartes, consultez leurs détails et composez votre deck."
     />
+    <script>
+      try {
+        if (localStorage.getItem("spam-deck-lab-theme") === "light") {
+          document.documentElement.dataset.theme = "light";
+        }
+      } catch (error) {}
+    </script>
     <title>SPAM — Deck Lab</title>
   </head>
   <body>

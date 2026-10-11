@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { AppView } from "../../types";
 import { useTranslation } from "../../i18n/LanguageContext";
+import { useTheme } from "../../theme/ThemeContext";
 
 const navigation: Array<{ id: AppView; labelKey: "shell.overview" | "shell.cardLibrary" | "shell.deckBuilder" | "shell.savedDecks" | "shell.metaWatch" | "shell.tips" | "shell.tox"; index: string }> = [
   { id: "overview", labelKey: "shell.overview", index: "01" },
@@ -31,6 +32,8 @@ export function AppShell({
   children: ReactNode;
 }) {
   const { language, setLanguage, t } = useTranslation();
+  const { theme, toggleTheme } = useTheme();
+  const isLight = theme === "light";
 
   return (
     <>
@@ -47,6 +50,26 @@ export function AppShell({
             <button aria-label={t("language.french")} aria-pressed={language === "fr"} onClick={() => setLanguage("fr")}>FR</button>
             <button aria-label={t("language.english")} aria-pressed={language === "en"} onClick={() => setLanguage("en")}>EN</button>
           </div>
+          <button
+            type="button"
+            className="theme-toggle"
+            role="switch"
+            aria-checked={isLight}
+            aria-label={t(isLight ? "theme.toDark" : "theme.toLight")}
+            title={t(isLight ? "theme.toDark" : "theme.toLight")}
+            onClick={toggleTheme}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {isLight ? (
+                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+              ) : (
+                <>
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                </>
+              )}
+            </svg>
+          </button>
           <span className="live-indicator"><i /> {t("shell.live")}</span>
           <a className="steam-link" href="https://store.steampowered.com/app/2902720/SPAM/" target="_blank" rel="noreferrer">
             <span className="steam-dot">↗</span> {t("shell.steam")}

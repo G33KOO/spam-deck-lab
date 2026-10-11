@@ -1,0 +1,5 @@
+/* Colors injected inline from the API are tuned for dark surfaces. */
+:root[data-theme="light"] .tox-effect span[style],
+:root[data-theme="light"] .tox-rarity {
+  filter: brightness(0.55) saturate(1.3);
+}
