@@ -4,6 +4,7 @@ import type { DeckCardSlot } from "../../hooks/useDeck";
 import { CardTile } from "../../components/cards/CardTile";
 import { DataNotice, LoadingState, PageHeader, SearchIcon } from "../../components/ui";
 import { useTranslation } from "../../i18n/LanguageContext";
+import { DeckInsights } from "./DeckInsights";
 
 export function DeckBuilder({
   catalogue,
@@ -253,6 +254,7 @@ export function DeckBuilder({
                 </label>
               )}
             </section>
+            {deckCards.length > 0 && <DeckInsights catalogue={catalogue} deckCards={deckCards} />}
           </div>
           {collectionOpen && (
             <div
