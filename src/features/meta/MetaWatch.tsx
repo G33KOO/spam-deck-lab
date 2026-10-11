@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CardCatalogue, CardData } from "../../types";
 import { CardTile } from "../../components/cards/CardTile";
+import { ShareLinkButton } from "../../components/ShareLinkButton";
 import { DataNotice, LoadingState, PageHeader, SearchIcon } from "../../components/ui";
 import { imageUrl } from "../../lib/cardAssets";
 import { useTranslation } from "../../i18n/LanguageContext";
@@ -224,6 +225,19 @@ export function MetaWatch({
         ? catalogue?.cards.find((item) => item.slug === option.slug)
         : undefined;
       return card ? [card] : [];
+    });
+  }
+
+  function shareSlots(build: CommunityBuild) {
+    return build.slots.flatMap((slot, slotIndex) => {
+      const cards = slotCards(build, slotIndex);
+      const card = selectedCard(build, slotIndex) ?? cards[0];
+      if (!card) return [];
+      const talentSlot = slot.talentSlot !== undefined &&
+        card.talents?.some((talent, index) => (talent.slot ?? index + 1) === slot.talentSlot)
+        ? slot.talentSlot
+        : null;
+      return [{ cards: [card, ...cards.filter((item) => item.id !== card.id)], talentSlot }];
     });
   }
 
@@ -511,13 +525,20 @@ export function MetaWatch({
                       )}
                     </div>
                   )}
-                  <button
-                    className="primary-button build-add-button"
-                    disabled={!hasIdentifiedCards}
-                    onClick={() => saveBuild(build)}
-                  >
-                    {t("meta.saveBuild")} <span>↗</span>
-                  </button>
+                  <div className="build-add-row">
+                    <button
+                      className="primary-button build-add-button"
+                      disabled={!hasIdentifiedCards}
+                      onClick={() => saveBuild(build)}
+                    >
+                      {t("meta.saveBuild")} <span>↗</span>
+                    </button>
+                    <ShareLinkButton
+                      name={buildCopy[build.id as keyof typeof buildCopy].title}
+                      disabled={!hasIdentifiedCards}
+                      slots={shareSlots(build)}
+                    />
+                  </div>
                 </article>
               );
             })}

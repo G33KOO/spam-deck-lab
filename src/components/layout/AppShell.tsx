@@ -3,14 +3,28 @@ import type { AppView } from "../../types";
 import { useTranslation } from "../../i18n/LanguageContext";
 import { useTheme } from "../../theme/ThemeContext";
 
-const navigation: Array<{ id: AppView; labelKey: "shell.overview" | "shell.cardLibrary" | "shell.deckBuilder" | "shell.savedDecks" | "shell.metaWatch" | "shell.tips" | "shell.tox"; index: string }> = [
-  { id: "overview", labelKey: "shell.overview", index: "01" },
-  { id: "cards", labelKey: "shell.cardLibrary", index: "02" },
-  { id: "tox", labelKey: "shell.tox", index: "03" },
-  { id: "builder", labelKey: "shell.deckBuilder", index: "04" },
-  { id: "saved", labelKey: "shell.savedDecks", index: "05" },
-  { id: "meta", labelKey: "shell.metaWatch", index: "06" },
-  { id: "tips", labelKey: "shell.tips", index: "07" },
+type NavLabelKey = "shell.overview" | "shell.cardLibrary" | "shell.deckBuilder" | "shell.savedDecks" | "shell.matches" | "shell.metaWatch" | "shell.tips" | "shell.tox";
+type NavItem = { id: AppView; labelKey: NavLabelKey; index: string };
+
+const navigationGroups: Array<{ labelKey: "shell.workspace" | "shell.account"; items: NavItem[] }> = [
+  {
+    labelKey: "shell.workspace",
+    items: [
+      { id: "overview", labelKey: "shell.overview", index: "01" },
+      { id: "cards", labelKey: "shell.cardLibrary", index: "02" },
+      { id: "tox", labelKey: "shell.tox", index: "03" },
+      { id: "builder", labelKey: "shell.deckBuilder", index: "04" },
+      { id: "meta", labelKey: "shell.metaWatch", index: "05" },
+      { id: "tips", labelKey: "shell.tips", index: "06" },
+    ],
+  },
+  {
+    labelKey: "shell.account",
+    items: [
+      { id: "saved", labelKey: "shell.savedDecks", index: "01" },
+      { id: "matches", labelKey: "shell.matches", index: "02" },
+    ],
+  },
 ];
 
 const OFFICIAL_SPAMDEX = "https://spamgame.com/spamdex";
@@ -79,33 +93,36 @@ export function AppShell({
 
       <div className="layout">
         <aside className="sidebar">
-          <div className="sidebar-label">{t("shell.workspace")}</div>
-          <nav className="side-nav" aria-label={t("shell.mainNavigation")}>
-            {navigation.map((item) => (
-              <button
-                key={item.id}
-                className={`nav-item ${activeView === item.id ? "active" : ""}`}
-                onClick={() => onNavigate(item.id)}
-              >
-                <span className="nav-index">{item.index}</span>
-                <span>{t(item.labelKey)}</span>
-                {item.id === "builder" && deckCount > 0 && (
-                  <span className="nav-count">{deckCount}</span>
-                )}
-                {item.id === "saved" && savedDecksLoaded && (
-                  <span className="nav-count" aria-label={t("shell.savedDeckCount", { count: savedDeckCount })}>
-                    {savedDeckCount}
-                  </span>
-                )}
-              </button>
-            ))}
-          </nav>
+          {navigationGroups.map((group) => (
+            <nav
+              key={group.labelKey}
+              className="nav-group"
+              aria-labelledby={`nav-label-${group.labelKey}`}
+            >
+              <div className="sidebar-label" id={`nav-label-${group.labelKey}`}>{t(group.labelKey)}</div>
+              <div className="side-nav">
+                {group.items.map((item) => (
+                  <button
+                    key={item.id}
+                    className={`nav-item ${activeView === item.id ? "active" : ""}`}
+                    onClick={() => onNavigate(item.id)}
+                  >
+                    <span className="nav-index">{item.index}</span>
+                    <span>{t(item.labelKey)}</span>
+                    {item.id === "builder" && deckCount > 0 && (
+                      <span className="nav-count">{deckCount}</span>
+                    )}
+                    {item.id === "saved" && savedDecksLoaded && (
+                      <span className="nav-count" aria-label={t("shell.savedDeckCount", { count: savedDeckCount })}>
+                        {savedDeckCount}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </nav>
+          ))}
           <div className="sidebar-spacer" />
-          <div className="sidebar-note">
-            <span className="note-icon">✳</span>
-            <p>{t("shell.sidebarPrompt")}</p>
-            <button onClick={() => onNavigate("builder")}>{t("shell.openBuilder")} <span>↗</span></button>
-          </div>
           <div className="sidebar-footer">
             <span>{t("shell.communityTool")}</span>
             <span>{t("shell.disclaimer")}</span>

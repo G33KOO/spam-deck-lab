@@ -1,4 +1,4 @@
-export type AppView = "overview" | "cards" | "builder" | "saved" | "meta" | "tips" | "tox";
+export type AppView = "overview" | "cards" | "builder" | "saved" | "matches" | "meta" | "tips" | "tox";
 export type CardSortOption = "number" | "name" | "hp" | "spamton";
 
 export interface CardData {

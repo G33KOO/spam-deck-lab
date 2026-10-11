@@ -1,6 +1,7 @@
 import type { CardCatalogue } from "../../types";
 import type { SavedDeck } from "../../hooks/useDeck";
 import { DataNotice, LoadingState, PageHeader } from "../../components/ui";
+import { ShareLinkButton } from "../../components/ShareLinkButton";
 import { imageUrl } from "../../lib/cardAssets";
 import { useTranslation } from "../../i18n/LanguageContext";
 
@@ -85,6 +86,17 @@ export function SavedDecks({
                     <button className="primary-button" type="button" onClick={() => onLoad(savedDeck.id)}>
                       {t("builder.loadSavedDeck")} <span>↗</span>
                     </button>
+                    <ShareLinkButton
+                      name={savedDeck.name}
+                      slots={savedDeck.slots.flatMap((slot) => {
+                        const card = catalogue?.cards.find((item) => item.slug === slot.selectedSlug);
+                        if (!card) return [];
+                        const alternatives = (slot.cardSlugs ?? [])
+                          .map((slug) => catalogue?.cards.find((item) => item.slug === slug))
+                          .filter((item): item is NonNullable<typeof item> => !!item && item.id !== card.id);
+                        return [{ cards: [card, ...alternatives], talentSlot: slot.talentSlot }];
+                      })}
+                    />
                     <button
                       className="saved-deck-delete"
                       type="button"

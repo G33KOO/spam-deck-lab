@@ -851,3 +851,36 @@
     border-color: #688600;
     color: #456300
 }
+:root[data-theme="light"] .match-message.error {
+    color: #7a1000
+}
+:root[data-theme="light"] .match-card.match-win {
+    border-left-color: #158b00
+}
+:root[data-theme="light"] .match-card.match-loss {
+    border-left-color: #840e00
+}
+:root[data-theme="light"] .match-win .match-result {
+    background: rgba(21, 139, 0, 0.16);
+    color: #158b00
+}
+:root[data-theme="light"] .match-loss .match-result {
+    background: rgba(132, 14, 0, 0.16);
+    color: #7a1000
+}
+:root[data-theme="light"] .match-deck-mine {
+    border-color: rgba(104, 134, 0, 0.45)
+}
+:root[data-theme="light"] .match-deck-opponent {
+    border-color: rgba(132, 14, 0, 0.45)
+}
+:root[data-theme="light"] .match-deck-opponent .match-deck-heading strong {
+    color: #7a1000
+}
+:root[data-theme="light"] .match-account-field input[aria-invalid="true"] {
+    border-color: #7a1000
+}
+:root[data-theme="light"] .share-link-button.failed {
+    border-color: #7a1000;
+    color: #7a1000
+}

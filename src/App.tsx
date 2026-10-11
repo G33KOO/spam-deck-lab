@@ -9,12 +9,13 @@ import { SavedDecks } from "./features/deck-builder/SavedDecks";
 import { MetaWatch } from "./features/meta/MetaWatch";
 import { StrategyTips } from "./features/meta/StrategyTips";
 import { ToxList } from "./features/tox/ToxList";
+import { RecentMatches } from "./features/matches/RecentMatches";
 import { Overview } from "./features/overview/Overview";
 import { useCardCatalogue } from "./hooks/useCardCatalogue";
 import { useCardFilters } from "./hooks/useCardFilters";
 import { useDeck } from "./hooks/useDeck";
 
-const appViews: AppView[] = ["overview", "cards", "builder", "saved", "meta", "tips", "tox"];
+const appViews: AppView[] = ["overview", "cards", "builder", "saved", "matches", "meta", "tips", "tox"];
 
 function getViewFromLocation(): AppView {
   const route = window.location.hash.slice(1).split("?")[0].replace(/^\/+/, "");
@@ -52,6 +53,7 @@ function App() {
     addAlternative,
     selectAlternative,
     selectTalent,
+    addDeckCards,
     removeAlternative,
     copied,
     copyDeck,
@@ -237,6 +239,25 @@ function App() {
               startNewDeck();
               navigateToView("builder");
             }}
+          />
+        )}
+        {activeView === "matches" && (
+          <RecentMatches
+            catalogue={catalogue}
+            error={loadError}
+            elementName={elementName}
+            onSelectCard={setSelectedCard}
+            onOpenDeck={(name, cards) => {
+              startNewDeck();
+              setDeckName(name);
+              addDeckCards(cards.map((card) => ({ card })));
+              navigateToView("builder");
+            }}
+            onSaveDeck={(name, cards) => saveCommunityDeck(
+              name,
+              cards.map((card) => ({ cards: [card], selectedCard: card, talentSlot: null })),
+              false,
+            )}
           />
         )}
         {activeView === "meta" && (
