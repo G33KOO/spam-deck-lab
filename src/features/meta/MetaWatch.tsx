@@ -224,6 +224,15 @@ const communityBuilds: CommunityBuild[] = [
         { options: [{ slug: "prisonniere_de_la_machine", label: "Prisonnière de la machine" }] },
       ],
     },
+    {
+      id: "20",
+      slots: [
+        { options: [{ slug: "maitre_thronebeur", label: "Maître Thronebéur" }] },
+        { options: [{ slug: "le_heraut_des_cendres", label: "Héraut des cendres" }] },
+        { options: [{ slug: "raffteru", label: "Raffteru" }] },
+        { options: [{ slug: "faerylia", label: "Faerylia" }] },
+      ],
+    },
 ];
 
 export function MetaWatch({
@@ -267,6 +276,7 @@ export function MetaWatch({
     "17": { title: t("meta.build.17.title"), description: t("meta.build.17.description") },
     "18": { title: t("meta.build.18.title"), description: t("meta.build.18.description") },
     "19": { title: t("meta.build.19.title"), description: t("meta.build.19.description") },
+    "20": { title: t("meta.build.20.title"), description: t("meta.build.20.description") },
   };
 
   function selectedCard(build: CommunityBuild, slotIndex: number): CardData | undefined {
