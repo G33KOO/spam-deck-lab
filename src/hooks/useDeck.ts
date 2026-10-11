@@ -581,5 +581,6 @@ export function useDeck(catalogue: CardCatalogue | null) {
     shareUrl,
     shareDeck,
     actionFeedback,
+    notifyAction,
   };
 }

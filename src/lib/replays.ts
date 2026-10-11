@@ -117,6 +117,18 @@ export function parseReplayIndex(text: string): MatchRecord[] | null {
   return matches.length ? matches : null;
 }
 
+/** Reads the account id (the replay sub-folder name) from the index, only to prefill the path field. */
+export function readReplayAccountId(text: string): string | null {
+  try {
+    const data: unknown = JSON.parse(text);
+    if (!Array.isArray(data)) return null;
+    const id = data.find((entry) => isRecord(entry) && typeof entry.AccountId === "string")?.AccountId;
+    return typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+
 export function mergeMatches(current: MatchRecord[], incoming: MatchRecord[]): MatchRecord[] {
   const byId = new Map<string, MatchRecord>();
   [...current, ...incoming].forEach((match) => byId.set(match.id, match));

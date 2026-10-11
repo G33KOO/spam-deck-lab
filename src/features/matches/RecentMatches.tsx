@@ -10,6 +10,7 @@ import {
   loadStoredMatches,
   mergeMatches,
   parseReplayIndex,
+  readReplayAccountId,
   storeMatches,
 } from "../../lib/replays";
 import type { MatchRecord, PlayerInfo } from "../../lib/replays";
@@ -57,6 +58,7 @@ export function RecentMatches({
   onSelectCard,
   onOpenDeck,
   onSaveDeck,
+  onNotify,
 }: {
   catalogue: CardCatalogue | null;
   error: string;
@@ -64,16 +66,19 @@ export function RecentMatches({
   onSelectCard: (card: CardData) => void;
   onOpenDeck: (name: string, cards: CardData[]) => void;
   onSaveDeck: (name: string, cards: CardData[]) => void;
+  onNotify: (message: string, error?: boolean) => void;
 }) {
   const { t, language } = useTranslation();
   const [matches, setMatches] = useState<MatchRecord[]>(loadStoredMatches);
+  const [refreshing, setRefreshing] = useState(false);
+  const [importOpen, setImportOpen] = useState(() => loadStoredMatches().length === 0);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [accountId, setAccountId] = useState(loadAccountId);
   const [hasHandle, setHasHandle] = useState(false);
   const [pathCopied, setPathCopied] = useState(false);
   const accountValid = ACCOUNT_ID_PATTERN.test(accountId.trim());
-  const displayedPath = `${REPLAY_PATH}\\${accountValid ? accountId.trim() : EXAMPLE_ACCOUNT_ID}\\index.json`;
+  const displayedPath = accountValid ? `${REPLAY_PATH}\\${accountId.trim()}\\index.json` : REPLAY_PATH;
   const inputRef = useRef<HTMLInputElement>(null);
   const locale = language === "fr" ? "fr-FR" : "en-GB";
 
@@ -81,28 +86,35 @@ export function RecentMatches({
     void loadReplayHandle().then((handle) => setHasHandle(handle !== null));
   }, []);
 
-  async function importFile(file: File | undefined, handle?: ReplayFileHandle): Promise<boolean> {
-    if (!file) return false;
+  async function importFile(file: File | undefined, handle?: ReplayFileHandle, announce = true): Promise<{ total: number; added: number } | null> {
+    if (!file) return null;
     if (file.size > MAX_INDEX_BYTES) {
       setMessage({ text: t("matches.importInvalid"), error: true });
-      return false;
+      return null;
     }
-    const parsed = parseReplayIndex(await file.text());
+    const text = await file.text();
+    const parsed = parseReplayIndex(text);
     if (!parsed) {
       setMessage({ text: t("matches.importInvalid"), error: true });
-      return false;
+      return null;
     }
+    const known = new Set(matches.map((match) => match.id));
+    const added = parsed.filter((match) => !known.has(match.id)).length;
     const merged = mergeMatches(matches, parsed);
     setMatches(merged);
     const saved = storeMatches(merged);
-    setMessage({
-      text: t(saved ? "matches.imported" : "matches.importedNotSaved", { count: parsed.length }),
-      error: !saved,
-    });
+    setMessage(announce || !saved
+      ? {
+        text: t(saved ? "matches.imported" : "matches.importedNotSaved", { count: parsed.length }),
+        error: !saved,
+      }
+      : null);
 
-    if (accountValid) {
+    const importedAccountId = readReplayAccountId(text);
+    if (importedAccountId) {
+      setAccountId(importedAccountId);
       try {
-        window.localStorage.setItem(ACCOUNT_STORAGE_KEY, accountId.trim());
+        window.localStorage.setItem(ACCOUNT_STORAGE_KEY, importedAccountId);
       } catch {
         // Remembering the account id is optional.
       }
@@ -111,14 +123,23 @@ export function RecentMatches({
       await saveReplayHandle(handle);
       setHasHandle(true);
     }
-    return true;
+    return { total: parsed.length, added };
   }
 
   async function refreshMatches() {
-    const handle = await loadReplayHandle();
-    const file = handle ? await readReplayHandle(handle) : null;
-    if (!file || !(await importFile(file))) {
-      await chooseFile();
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const handle = await loadReplayHandle();
+      const file = handle ? await readReplayHandle(handle) : null;
+      const result = file ? await importFile(file, undefined, false) : null;
+      if (result) {
+        onNotify(t(result.added ? "matches.refreshedNew" : "matches.refreshedNone", { count: result.added }));
+      } else {
+        await chooseFile();
+      }
+    } finally {
+      setRefreshing(false);
     }
   }
 
@@ -177,6 +198,8 @@ export function RecentMatches({
     setHasHandle(false);
     setMatches([]);
     setMessage(null);
+    setImportOpen(true);
+    onNotify(t("matches.cleared"));
   }
 
   function resolveCards(ids: string[]) {
@@ -284,6 +307,31 @@ export function RecentMatches({
       <DataNotice error={error} />
       {!catalogue && !error ? <LoadingState /> : catalogue && (
         <>
+          {matches.length > 0 && (
+            <div className="match-toolbar">
+              {(hasHandle || accountValid) && (
+                <button
+                  type="button"
+                  className="match-action"
+                  disabled={refreshing}
+                  aria-busy={refreshing}
+                  onClick={() => void refreshMatches()}
+                >
+                  <span className={`match-refresh-icon ${refreshing ? "spinning" : ""}`} aria-hidden="true">↻</span>
+                  {" "}{t(refreshing ? "matches.refreshing" : "matches.refresh")}
+                </button>
+              )}
+              <button type="button" className="match-action" onClick={clearMatches}>
+                {t("matches.clear")}
+              </button>
+            </div>
+          )}
+          <details
+            className="match-import-details"
+            open={importOpen}
+            onToggle={(event) => setImportOpen(event.currentTarget.open)}
+          >
+            <summary>{t("matches.importTitle")}</summary>
           <div
             className={`match-import ${dragging ? "dragging" : ""}`}
             onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
@@ -291,8 +339,13 @@ export function RecentMatches({
             onDrop={onDrop}
           >
             <div>
-              <strong>{t("matches.importTitle")}</strong>
               <p>{t("matches.importHelp")}</p>
+              <ol className="match-steps">
+                <li>{t("matches.step1")}</li>
+                <li>{t("matches.step2")}</li>
+                <li>{t("matches.step3")}</li>
+                <li>{t("matches.step4")}</li>
+              </ol>
               <label className="match-account-field">
                 <span>{t("matches.accountLabel")}</span>
                 <input
@@ -316,16 +369,6 @@ export function RecentMatches({
               <button type="button" className="primary-button" onClick={() => void chooseFile()}>
                 {t("matches.choose")} <span>↗</span>
               </button>
-              {(hasHandle || (accountValid && matches.length > 0)) && (
-                <button type="button" className="match-action" onClick={() => void refreshMatches()}>
-                  ↻ {t("matches.refresh")}
-                </button>
-              )}
-              {matches.length > 0 && (
-                <button type="button" className="match-action" onClick={clearMatches}>
-                  {t("matches.clear")}
-                </button>
-              )}
             </div>
             <input
               ref={inputRef}
@@ -335,6 +378,7 @@ export function RecentMatches({
               onChange={onInputChange}
             />
           </div>
+          </details>
           {message && (
             <p className={`match-message ${message.error ? "error" : ""}`} role={message.error ? "alert" : "status"}>
               {message.text}

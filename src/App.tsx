@@ -42,6 +42,7 @@ function App() {
     savedDecksLoaded,
     storageError,
     actionFeedback,
+    notifyAction,
     saveCurrentDeck,
     saveCommunityDeck,
     loadSavedDeck,
@@ -246,6 +247,7 @@ function App() {
             catalogue={catalogue}
             error={loadError}
             elementName={elementName}
+            onNotify={notifyAction}
             onSelectCard={setSelectedCard}
             onOpenDeck={(name, cards) => {
               startNewDeck();

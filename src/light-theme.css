@@ -851,6 +851,9 @@
     border-color: #688600;
     color: #456300
 }
+:root[data-theme="light"] .match-import-details > summary:hover::after {
+    color: #e9ebe6
+}
 :root[data-theme="light"] .match-message.error {
     color: #7a1000
 }
